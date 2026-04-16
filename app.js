@@ -15,7 +15,10 @@ const App = (() => {
     journalSort:      { col: 'created_at', dir: 'desc' }
   };
 
-  function save() { Storage.saveData(state.data); }
+  function save() {
+    Storage.saveData(state.data);
+    _pushToGitHub(); // async, non-blocking
+  }
 
   // ─── Init ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +27,7 @@ const App = (() => {
     _replayAllTrades();
     UI.init(state);
     _bindGlobalEvents();
+    _updateSyncButton();
     UI.renderTab(state.activeTab);
   }
 
@@ -235,6 +239,140 @@ const App = (() => {
     UI.showToast('Setup deleted', 'info');
   }
 
+  // ─── GitHub Sync ─────────────────────────────────────────────────────────────
+
+  function _setSyncStatus(state) {
+    // state: 'idle' | 'syncing' | 'ok' | 'error'
+    const el = document.getElementById('github-sync-status');
+    if (!el) return;
+    const labels = { idle: '', syncing: '⟳ syncing…', ok: '✓ synced', error: '✗ sync failed' };
+    const cls    = { idle: '', syncing: 'sync-syncing', ok: 'sync-ok', error: 'sync-error' };
+    el.textContent = labels[state] || '';
+    el.className   = 'sync-status ' + (cls[state] || '');
+  }
+
+  async function _pushToGitHub() {
+    if (!Storage.hasGitHubConfig()) return;
+    _setSyncStatus('syncing');
+    const result = await Storage.syncToGitHub(state.data);
+    if (result.ok) {
+      _setSyncStatus('ok');
+      setTimeout(() => _setSyncStatus('idle'), 3000);
+    } else {
+      _setSyncStatus('error');
+      UI.showToast('GitHub sync failed: ' + result.error, 'error');
+    }
+  }
+
+  async function _pullFromGitHub() {
+    if (!Storage.hasGitHubConfig()) {
+      UI.showToast('GitHub not configured — click ⚙ GitHub', 'info');
+      return;
+    }
+    _setSyncStatus('syncing');
+    const result = await Storage.syncFromGitHub();
+    if (result.ok) {
+      state.data = { ...Storage.defaultData(), ...result.data,
+        app_settings: { ...Storage.defaultData().app_settings, ...(result.data.app_settings || {}) }
+      };
+      state.lastResult       = null;
+      state.lastResultSaved  = false;
+      state.lastSavedSetupId = null;
+      _replayAllTrades();
+      Storage.saveData(state.data);
+      _switchTab(state.activeTab);
+      _setSyncStatus('ok');
+      setTimeout(() => _setSyncStatus('idle'), 3000);
+      UI.showToast('Pulled from GitHub', 'success');
+    } else {
+      _setSyncStatus('error');
+      UI.showToast('GitHub pull failed: ' + result.error, 'error');
+    }
+  }
+
+  function _showGitHubSettings() {
+    const cfg = Storage.loadGitHubConfig();
+    const html = `
+      <div class="modal-header">⚙ GitHub Sync Settings</div>
+      <div class="modal-body">
+        <p class="modal-desc">Data is auto-pushed to GitHub on every save. Token is stored only in your browser (localStorage), never in the repo.</p>
+        <form id="github-settings-form" class="modal-form">
+          <label>
+            Personal Access Token
+            <input type="password" name="token" value="${cfg.token}" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" required>
+            <span class="field-hint">Needs <code>repo</code> scope. <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Create token ↗</a></span>
+          </label>
+          <label>
+            Repository Owner (username or org)
+            <input type="text" name="owner" value="${cfg.owner}" placeholder="your-username" required>
+          </label>
+          <label>
+            Repository Name
+            <input type="text" name="repo" value="${cfg.repo}" placeholder="impulse-swing-journal" required>
+          </label>
+          <label>
+            File Path in repo
+            <input type="text" name="path" value="${cfg.path || 'data.json'}" placeholder="data.json" required>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="btn-github-test" class="btn btn-ghost">Test Connection</button>
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+          </div>
+        </form>
+        <div id="github-test-result" class="github-test-result"></div>
+      </div>`;
+
+    UI.openModal(html);
+
+    document.getElementById('github-settings-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      Storage.saveGitHubConfig({
+        token: fd.get('token').trim(),
+        owner: fd.get('owner').trim(),
+        repo:  fd.get('repo').trim(),
+        path:  fd.get('path').trim() || 'data.json'
+      });
+      UI.closeModal();
+      UI.showToast('GitHub settings saved', 'success');
+      _updateSyncButton();
+    });
+
+    document.getElementById('btn-github-test').addEventListener('click', async () => {
+      const fd  = new FormData(document.getElementById('github-settings-form'));
+      const cfg = {
+        token: fd.get('token').trim(),
+        owner: fd.get('owner').trim(),
+        repo:  fd.get('repo').trim(),
+        path:  fd.get('path').trim() || 'data.json'
+      };
+      const resEl = document.getElementById('github-test-result');
+      resEl.textContent = '⟳ Testing…';
+      resEl.className   = 'github-test-result';
+
+      // Save temporarily to test
+      const prev = Storage.loadGitHubConfig();
+      Storage.saveGitHubConfig(cfg);
+
+      const result = await Storage.syncFromGitHub();
+      Storage.saveGitHubConfig(prev); // restore
+
+      if (result.ok) {
+        resEl.textContent = `✓ Connected — ${result.data?.setups?.length ?? 0} setups, ${result.data?.trades?.length ?? 0} trades found`;
+        resEl.className   = 'github-test-result test-ok';
+      } else {
+        resEl.textContent = '✗ ' + result.error;
+        resEl.className   = 'github-test-result test-error';
+      }
+    });
+  }
+
+  function _updateSyncButton() {
+    const btn = document.getElementById('btn-sync-from');
+    if (!btn) return;
+    btn.style.display = Storage.hasGitHubConfig() ? '' : 'none';
+  }
+
   // ─── Navigation ──────────────────────────────────────────────────────────────
 
   function _switchTab(tab) {
@@ -254,6 +392,12 @@ const App = (() => {
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => _switchTab(btn.dataset.tab));
     });
+
+    // ── GitHub settings ──
+    document.getElementById('btn-github-settings').addEventListener('click', _showGitHubSettings);
+
+    // ── GitHub pull ──
+    document.getElementById('btn-sync-from').addEventListener('click', _pullFromGitHub);
 
     // ── Export ──
     document.getElementById('btn-export').addEventListener('click', () => {
@@ -301,18 +445,14 @@ const App = (() => {
 
     // ── Result tab actions (delegated) ──
     document.getElementById('tab-result').addEventListener('click', e => {
-      // "Save & Create Trade" OR "+ Create Trade" (after already saved)
       if (e.target.id === 'btn-save-setup') {
         if (!state.lastResultSaved) {
-          // First click: save and create
           const sid = saveSetup();
           if (sid) createTradeFromSetup(sid);
         } else {
-          // Already saved, just create trade
           createTradeFromSetup(state.lastSavedSetupId);
         }
       }
-      // "Save to Journal" only (no trade)
       if (e.target.id === 'btn-save-only') {
         saveSetup();
       }
@@ -337,7 +477,7 @@ const App = (() => {
       }
     });
 
-    // ── Journal filters — select/text change ──
+    // ── Journal filters ──
     document.getElementById('tab-journal').addEventListener('change', e => {
       if (e.target.closest('#journal-filters')) {
         state.journalFilters[e.target.name] = e.target.value;

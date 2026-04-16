@@ -30,6 +30,9 @@
       </nav>
 
       <div class="header-actions">
+        <span id="github-sync-status" class="sync-status" title=""></span>
+        <button id="btn-sync-from" class="btn btn-ghost btn-sm" title="Pull latest data from GitHub">↓ GitHub</button>
+        <button id="btn-github-settings" class="btn btn-ghost btn-sm" title="GitHub sync settings">⚙ GitHub</button>
         <button id="btn-export" class="btn btn-ghost btn-sm" title="Export all data as JSON">↑ Export</button>
         <label class="btn btn-ghost btn-sm" title="Import JSON data">
           ↓ Import
@@ -126,9 +129,9 @@
             </div>
           </div>
 
-          <!-- Group 3: D+1 Data -->
+          <!-- Group 3: D+1 Data (optional) -->
           <div class="form-section">
-            <div class="form-section-title">D+1 — Setup / Consolidation Day</div>
+            <div class="form-section-title">D+1 — Setup / Consolidation Day <span class="section-optional">optional — add after market close</span></div>
             <div class="form-grid form-grid-3">
               <label class="form-field">
                 <span class="field-label">Date (D+1)</span>
@@ -136,22 +139,22 @@
               </label>
               <label class="form-field">
                 <span class="field-label">Open D+1</span>
-                <input type="number" name="open_d1" step="0.01" placeholder="0.00" required>
+                <input type="number" name="open_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field span-empty"></label>
             </div>
             <div class="form-grid form-grid-4">
               <label class="form-field">
                 <span class="field-label">High D+1</span>
-                <input type="number" name="high_d1" step="0.01" placeholder="0.00" required>
+                <input type="number" name="high_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field">
                 <span class="field-label">Low D+1</span>
-                <input type="number" name="low_d1" step="0.01" placeholder="0.00" required>
+                <input type="number" name="low_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field">
                 <span class="field-label">Close D+1</span>
-                <input type="number" name="close_d1" step="0.01" placeholder="0.00" required>
+                <input type="number" name="close_d1" step="0.01" placeholder="0.00">
               </label>
             </div>
           </div>

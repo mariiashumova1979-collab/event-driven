@@ -802,3 +802,121 @@ a { color: var(--blue); text-decoration: none; }
   .stats-summary-grid { grid-template-columns: repeat(2, 1fr); }
   .result-grid { grid-template-columns: 1fr; }
 }
+
+/* ── D0-only / pending D1 styles ── */
+.section-optional {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.d1-pending-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.d1-pending-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.d1-pending-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.d1-pending-icon.muted {
+  opacity: 0.3;
+}
+
+.d1-pending-msg {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 22ch;
+  margin: 0;
+}
+
+.d1-pending-msg.muted {
+  opacity: 0.5;
+}
+
+.card-muted {
+  opacity: 0.5;
+}
+
+/* ── GitHub Sync ── */
+.sync-status {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.sync-syncing { color: var(--text-muted); animation: pulse 1s infinite; }
+.sync-ok      { color: var(--color-green); }
+.sync-error   { color: var(--color-red); }
+
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
+
+/* ── GitHub Settings Modal ── */
+.modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+.modal-body { padding: 0 0.25rem; }
+.modal-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.9rem;
+}
+.modal-form label input[type="text"],
+.modal-form label input[type="password"] {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.88rem;
+  font-family: var(--font-mono);
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.modal-form label input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.field-hint a { color: var(--color-blue); text-decoration: none; }
+.field-hint code {
+  background: var(--bg-card);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.72rem;
+}
+.github-test-result {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  font-family: var(--font-mono);
+  min-height: 1.2em;
+  color: var(--text-muted);
+}
+.test-ok    { color: var(--color-green); }
+.test-error { color: var(--color-red); }

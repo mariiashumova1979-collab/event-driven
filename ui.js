@@ -14,6 +14,15 @@ const UI = (() => {
     const risk = document.getElementById('risk_percent_per_trade');
     if (acct && settings.default_account_size) acct.value = settings.default_account_size;
     if (risk && settings.default_risk_percent)  risk.value = settings.default_risk_percent;
+
+    // Default dates: D0 = today, D+1 = tomorrow
+    const today    = new Date();
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const fmt = d => d.toISOString().slice(0, 10);
+    const d0  = document.getElementById('date_d0');
+    const d1  = document.getElementById('date_d1');
+    if (d0 && !d0.value) d0.value = fmt(today);
+    if (d1 && !d1.value) d1.value = fmt(tomorrow);
   }
 
   // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -37,6 +46,10 @@ const UI = (() => {
     const ticker = v('ticker');
     if (!ticker) { showToast('Ticker is required', 'error'); return null; }
 
+    // Detect if D1 data was entered (all 4 OHLC fields filled)
+    const d1_vals = ['open_d1','high_d1','low_d1','close_d1'].map(k => v(k));
+    const has_d1  = d1_vals.every(val => val !== '' && val != null && !isNaN(parseFloat(val)));
+
     const inputs = {
       ticker:               ticker.toUpperCase(),
       direction:            v('direction'),
@@ -49,19 +62,19 @@ const UI = (() => {
       relative_volume_d0:   n('relative_volume_d0'),
       close_prev_day:       n('close_prev_day'),
       atr14:                n('atr14'),
-      date_d1:              v('date_d1'),
-      open_d1:              n('open_d1'),
-      high_d1:              n('high_d1'),
-      low_d1:               n('low_d1'),
-      close_d1:             n('close_d1'),
+      has_d1,
+      date_d1:              has_d1 ? v('date_d1')   : null,
+      open_d1:              has_d1 ? n('open_d1')   : null,
+      high_d1:              has_d1 ? n('high_d1')   : null,
+      low_d1:               has_d1 ? n('low_d1')    : null,
+      close_d1:             has_d1 ? n('close_d1')  : null,
       account_size:         n('account_size'),
       risk_percent_per_trade: n('risk_percent_per_trade')
     };
 
-    // Basic sanity checks
+    // D0 required fields only
     const required = ['open_d0','high_d0','low_d0','close_d0','relative_volume_d0',
-                       'close_prev_day','atr14','open_d1','high_d1','low_d1','close_d1',
-                       'account_size','risk_percent_per_trade'];
+                       'close_prev_day','atr14','account_size','risk_percent_per_trade'];
     for (const k of required) {
       if (isNaN(inputs[k]) || inputs[k] == null) {
         showToast(`Missing or invalid value: ${k.replace(/_/g,' ')}`, 'error');
@@ -82,9 +95,81 @@ const UI = (() => {
 
     const { inputs, metrics, d0_valid, d0_invalid_reasons, d1_pattern, trade_plan, trade_valid, invalid_reasons } = result;
     const dir = inputs.direction;
-    const validClass = trade_valid ? 'valid' : 'invalid';
 
     const badge = (ok, label) => `<span class="badge ${ok ? 'badge-ok' : 'badge-fail'}">${ok ? '✓' : '✗'} ${label}</span>`;
+
+    // ── D0-only mode ──────────────────────────────────────────────────────────
+    if (!inputs.has_d1) {
+      const d0StatusClass = d0_valid ? 'valid' : 'invalid';
+      const d0Verdict = d0_valid ? 'D0 PASS — ADD D+1' : 'D0 FAIL';
+
+      const saveBtn = saved
+        ? `<button class="btn btn-ghost" disabled>✓ Saved to Journal</button>`
+        : `<button class="btn btn-primary" id="btn-save-only">Save to Journal</button>`;
+
+      const reasonsHtml = d0_invalid_reasons.length
+        ? `<div class="invalid-reasons"><strong>Issues:</strong><ul>${d0_invalid_reasons.map(r => `<li>${_esc(r)}</li>`).join('')}</ul></div>`
+        : '';
+
+      el.innerHTML = `
+        <div class="result-header">
+          <div class="result-title">
+            <span class="ticker-tag">${_esc(inputs.ticker)}</span>
+            <span class="dir-badge dir-${dir}">${dir.toUpperCase()}</span>
+            <span class="verdict-badge verdict-${d0StatusClass}">${d0Verdict}</span>
+          </div>
+          <div class="result-actions">${saveBtn}</div>
+        </div>
+
+        ${reasonsHtml}
+
+        <div class="result-grid">
+          <div class="result-card">
+            <div class="card-title">D0 — Candle Metrics</div>
+            <table class="metrics-table">
+              <tr><td>Date</td><td class="mono">${inputs.date_d0 || '—'}</td></tr>
+              <tr><td>OHLC</td><td class="mono">${inputs.open_d0} / ${inputs.high_d0} / ${inputs.low_d0} / ${inputs.close_d0}</td></tr>
+              <tr><td>Range D0</td><td class="mono">${metrics.range_d0}</td></tr>
+              <tr><td>Mid D0</td><td class="mono">${metrics.mid_d0}</td></tr>
+              <tr><td>Prev Close</td><td class="mono">${inputs.close_prev_day}</td></tr>
+              <tr><td>ATR14</td><td class="mono">${inputs.atr14}</td></tr>
+              <tr><td>Relative Volume</td><td class="mono ${inputs.relative_volume_d0 >= 1.5 ? 'text-ok' : 'text-fail'}">${inputs.relative_volume_d0}x</td></tr>
+            </table>
+          </div>
+
+          <div class="result-card">
+            <div class="card-title">D0 — Validation ${badge(d0_valid, d0_valid ? 'Pass' : 'Fail')}</div>
+            <table class="metrics-table">
+              <tr><td>Impulse</td><td class="mono ${_impulseClass(metrics.impulse, dir)}">${Strategy.r2(metrics.impulse * 100)}%</td></tr>
+              <tr><td>Body Ratio</td><td class="mono ${metrics.body > 0.5 ? 'text-ok' : 'text-fail'}">${Strategy.r2(metrics.body * 100)}%</td></tr>
+              <tr><td>${dir === 'long' ? 'CLV Long' : 'CLV Short'}</td>
+                  <td class="mono ${(dir === 'long' ? metrics.clv_long : metrics.clv_short) > 0.7 ? 'text-ok' : 'text-fail'}">
+                    ${Strategy.r2((dir === 'long' ? metrics.clv_long : metrics.clv_short) * 100)}%
+                  </td></tr>
+              <tr><td>Price ≥ $20</td><td class="mono ${inputs.close_d0 >= 20 ? 'text-ok' : 'text-fail'}">${inputs.close_d0 >= 20 ? '✓' : '✗'}</td></tr>
+            </table>
+            ${d0_invalid_reasons.length
+              ? `<div class="sub-reasons">${d0_invalid_reasons.map(r => `<div class="reason-item">↳ ${_esc(r)}</div>`).join('')}</div>`
+              : ''}
+          </div>
+
+          <div class="result-card d1-pending-card ${d0_valid ? '' : 'card-muted'}">
+            <div class="card-title">D+1 — Pending</div>
+            <div class="d1-pending-body">
+              ${d0_valid
+                ? `<div class="d1-pending-icon">⏳</div>
+                   <p class="d1-pending-msg">D0 validated. Return after market close tomorrow and add D+1 data to complete the setup analysis and generate a trade plan.</p>`
+                : `<div class="d1-pending-icon muted">✗</div>
+                   <p class="d1-pending-msg muted">D0 failed validation. D+1 analysis is not required.</p>`
+              }
+            </div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Full mode (D0 + D1) ────────────────────────────────────────────────────
+    const validClass = trade_valid ? 'valid' : 'invalid';
 
     const patternBadges = d1_pattern.detected.length > 0
       ? d1_pattern.detected.map(p => `<span class="badge badge-pattern">${p}</span>`).join(' ')
@@ -331,7 +416,8 @@ const UI = (() => {
     });
   }
 
-  function openModal() {
+  function openModal(html) {
+    if (html) document.getElementById('modal-content').innerHTML = html;
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modal-backdrop').classList.remove('hidden');
   }
