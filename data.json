@@ -1,60 +1,6 @@
 {
   "setups": [
     {
-      "id": "mo1w9bu99bz5r4h",
-      "created_at": "2026-04-16T19:50:35.313Z",
-      "inputs": {
-        "ticker": "SCHW",
-        "direction": "short",
-        "date_d0": "2026-04-16",
-        "open_d0": 9576,
-        "high_d0": 98.75,
-        "low_d0": 91.92,
-        "close_d0": 92.83,
-        "volume_d0": 18.98,
-        "relative_volume_d0": 3.17,
-        "close_prev_day": 100.27,
-        "atr14": 3.17,
-        "has_d1": false,
-        "date_d1": null,
-        "open_d1": null,
-        "high_d1": null,
-        "low_d1": null,
-        "close_d1": null,
-        "account_size": 11900,
-        "risk_percent_per_trade": 1
-      },
-      "metrics": {
-        "range_d0": 6.83,
-        "mid_d0": 95.335,
-        "impulse": -0.0742,
-        "body": 1388.4583,
-        "clv_long": 0.1332,
-        "clv_short": 0.8668
-      },
-      "d0_valid": true,
-      "d0_invalid_reasons": [],
-      "d1_pattern": {
-        "detected": [],
-        "structure_valid": false,
-        "inside_day": false,
-        "weak_pullback": false,
-        "compression": false
-      },
-      "trade_plan": {
-        "entry": 0,
-        "stop": 0,
-        "tp1": 0,
-        "tp2": 0,
-        "position_size": 0,
-        "risk_per_share": 0,
-        "stop_valid": false
-      },
-      "trade_valid": false,
-      "invalid_reasons": [],
-      "trade_id": null
-    },
-    {
       "id": "mo1ym70zh4t5h54",
       "created_at": "2026-04-16T20:56:34.835Z",
       "inputs": {
