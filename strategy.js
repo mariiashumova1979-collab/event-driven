@@ -191,12 +191,22 @@ const Strategy = (() => {
         not_too_far:       `Close D1 > ${r4(low_d0 - 0.5 * atr14)} (L0 − 0.5×ATR)`,
       };
 
+      // Estimated stop and position size using 1×ATR as proxy for stop distance
+      const stop_est  = r4(dir === 'long' ? high_d0 - 1.0 * atr14 : low_d0 + 1.0 * atr14);
+      const rps_est   = r4(Math.abs(entry - stop_est));
+      const risk_amount = r2(inputs.account_size * (inputs.risk_percent_per_trade / 100));
+      const pos_est   = rps_est > 0 ? Math.floor(risk_amount / rps_est) : 0;
+
       return {
         metrics,
         d0_valid: d0_res.valid,
         d0_invalid_reasons: d0_res.reasons,
         d1_pattern: { detected: [], structure_valid: false },
-        trade_plan: { entry, stop: null, tp1: null, tp2: null, position_size: null, risk_per_share: null, stop_valid: null },
+        trade_plan: {
+          entry,
+          stop_est, rps_est, pos_est, risk_amount,
+          stop: null, tp1: null, tp2: null, position_size: null, risk_per_share: null, stop_valid: null
+        },
         d1_conditions,
         trade_valid: false,
         invalid_reasons: d0_res.reasons

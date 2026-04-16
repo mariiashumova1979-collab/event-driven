@@ -191,9 +191,16 @@ const UI = (() => {
                   <td class="mono text-entry text-lg">$${entry}</td></tr>
               <tr><td>${dir === 'long' ? 'H0' : 'L0'}</td>
                   <td class="mono">${dir === 'long' ? '$'+inputs.high_d0 : '$'+inputs.low_d0}</td></tr>
-              <tr><td>ATR14</td><td class="mono">${inputs.atr14}</td></tr>
-              <tr><td>Stop / TP</td><td class="mono text-muted">after D+1</td></tr>
-              <tr><td>Position</td><td class="mono text-muted">after D+1</td></tr>
+              <tr><td>Stop est. (1×ATR)</td>
+                  <td class="mono text-stop">$${trade_plan.stop_est}</td></tr>
+              <tr><td>Risk / share est.</td>
+                  <td class="mono">$${trade_plan.rps_est}</td></tr>
+              <tr><td>Risk amount</td>
+                  <td class="mono">$${trade_plan.risk_amount}</td></tr>
+              <tr><td>Position est.</td>
+                  <td class="mono text-highlight">${trade_plan.pos_est} sh <span class="text-muted text-xs">est.</span></td></tr>
+              <tr><td>Final size</td>
+                  <td class="mono text-muted">after D+1</td></tr>
             </table>
           </div>
         </div>
