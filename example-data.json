@@ -1,0 +1,346 @@
+{
+  "app_settings": {
+    "default_account_size": 25000,
+    "default_risk_percent": 1
+  },
+  "setups": [
+    {
+      "id": "setup_nvda_001",
+      "created_at": "2024-11-22T09:30:00Z",
+      "inputs": {
+        "ticker": "NVDA",
+        "direction": "long",
+        "date_d0": "2024-11-21",
+        "open_d0": 138.50,
+        "high_d0": 150.30,
+        "low_d0": 137.20,
+        "close_d0": 148.80,
+        "volume_d0": 48200000,
+        "relative_volume_d0": 3.2,
+        "close_prev_day": 136.00,
+        "atr14": 6.40,
+        "date_d1": "2024-11-22",
+        "open_d1": 147.50,
+        "high_d1": 149.60,
+        "low_d1": 143.80,
+        "close_d1": 146.20,
+        "account_size": 25000,
+        "risk_percent_per_trade": 1
+      },
+      "metrics": {
+        "range_d0": 13.1,
+        "mid_d0": 143.75,
+        "impulse": 0.0941,
+        "body": 0.7939,
+        "clv_long": 0.8855,
+        "clv_short": 0.1145
+      },
+      "d0_valid": true,
+      "d0_invalid_reasons": [],
+      "d1_pattern": {
+        "inside_day": false,
+        "weak_pullback": true,
+        "compression": true,
+        "structure_valid": true,
+        "detected": ["Weak Pullback", "Compression"]
+      },
+      "trade_plan": {
+        "entry": 150.94,
+        "stop": 142.52,
+        "risk_per_share": 8.42,
+        "risk_amount": 250,
+        "position_size": 29,
+        "tp1": 159.36,
+        "tp2": 167.78,
+        "stop_valid": true,
+        "stop_ratio": 1.32
+      },
+      "trade_valid": true,
+      "invalid_reasons": [],
+      "trade_id": "trade_nvda_001"
+    },
+    {
+      "id": "setup_crwd_001",
+      "created_at": "2024-11-27T09:30:00Z",
+      "inputs": {
+        "ticker": "CRWD",
+        "direction": "long",
+        "date_d0": "2024-11-26",
+        "open_d0": 355.00,
+        "high_d0": 385.20,
+        "low_d0": 352.00,
+        "close_d0": 381.00,
+        "volume_d0": 6800000,
+        "relative_volume_d0": 2.8,
+        "close_prev_day": 345.00,
+        "atr14": 14.50,
+        "date_d1": "2024-11-27",
+        "open_d1": 378.00,
+        "high_d1": 382.50,
+        "low_d1": 368.00,
+        "close_d1": 374.00,
+        "account_size": 25000,
+        "risk_percent_per_trade": 1
+      },
+      "metrics": {
+        "range_d0": 33.2,
+        "mid_d0": 368.6,
+        "impulse": 0.1043,
+        "body": 0.7831,
+        "clv_long": 0.8765,
+        "clv_short": 0.1235
+      },
+      "d0_valid": true,
+      "d0_invalid_reasons": [],
+      "d1_pattern": {
+        "inside_day": false,
+        "weak_pullback": true,
+        "compression": false,
+        "structure_valid": true,
+        "detected": ["Weak Pullback"]
+      },
+      "trade_plan": {
+        "entry": 386.65,
+        "stop": 365.10,
+        "risk_per_share": 21.55,
+        "risk_amount": 250,
+        "position_size": 11,
+        "tp1": 408.20,
+        "tp2": 429.75,
+        "stop_valid": true,
+        "stop_ratio": 1.49
+      },
+      "trade_valid": true,
+      "invalid_reasons": [],
+      "trade_id": "trade_crwd_001"
+    },
+    {
+      "id": "setup_shop_001",
+      "created_at": "2024-11-14T09:30:00Z",
+      "inputs": {
+        "ticker": "SHOP",
+        "direction": "long",
+        "date_d0": "2024-11-13",
+        "open_d0": 92.00,
+        "high_d0": 100.50,
+        "low_d0": 90.80,
+        "close_d0": 94.50,
+        "volume_d0": 22000000,
+        "relative_volume_d0": 2.1,
+        "close_prev_day": 87.20,
+        "atr14": 3.80,
+        "date_d1": "2024-11-14",
+        "open_d1": 94.80,
+        "high_d1": 96.20,
+        "low_d1": 91.20,
+        "close_d1": 92.40,
+        "account_size": 25000,
+        "risk_percent_per_trade": 1
+      },
+      "metrics": {
+        "range_d0": 9.7,
+        "mid_d0": 95.65,
+        "impulse": 0.0836,
+        "body": 0.2577,
+        "clv_long": 0.3814,
+        "clv_short": 0.6186
+      },
+      "d0_valid": false,
+      "d0_invalid_reasons": [
+        "Body ratio 25.77% ≤ 50% — weak candle",
+        "CLV_long 38.14% ≤ 70% — close too low in range"
+      ],
+      "d1_pattern": {
+        "inside_day": false,
+        "weak_pullback": false,
+        "compression": false,
+        "structure_valid": false,
+        "detected": []
+      },
+      "trade_plan": {
+        "entry": 100.88,
+        "stop": 90.44,
+        "risk_per_share": 10.44,
+        "risk_amount": 250,
+        "position_size": 23,
+        "tp1": 111.32,
+        "tp2": 121.76,
+        "stop_valid": true,
+        "stop_ratio": 2.75
+      },
+      "trade_valid": false,
+      "invalid_reasons": [
+        "Body ratio 25.77% ≤ 50% — weak candle",
+        "CLV_long 38.14% ≤ 70% — close too low in range",
+        "No valid D+1 structure (Inside Day / Weak Pullback / Compression)",
+        "Stop too wide: 2.75× ATR > 1.5× max"
+      ],
+      "trade_id": null
+    },
+    {
+      "id": "setup_smci_001",
+      "created_at": "2024-11-06T09:30:00Z",
+      "inputs": {
+        "ticker": "SMCI",
+        "direction": "short",
+        "date_d0": "2024-11-05",
+        "open_d0": 44.00,
+        "high_d0": 44.80,
+        "low_d0": 39.20,
+        "close_d0": 40.10,
+        "volume_d0": 38000000,
+        "relative_volume_d0": 4.5,
+        "close_prev_day": 43.50,
+        "atr14": 2.30,
+        "date_d1": "2024-11-06",
+        "open_d1": 40.20,
+        "high_d1": 42.10,
+        "low_d1": 39.50,
+        "close_d1": 41.20,
+        "account_size": 25000,
+        "risk_percent_per_trade": 1
+      },
+      "metrics": {
+        "range_d0": 5.6,
+        "mid_d0": 42.0,
+        "impulse": -0.0782,
+        "body": 0.6964,
+        "clv_long": 0.1607,
+        "clv_short": 0.8393
+      },
+      "d0_valid": true,
+      "d0_invalid_reasons": [],
+      "d1_pattern": {
+        "inside_day": true,
+        "weak_pullback": false,
+        "compression": false,
+        "structure_valid": true,
+        "detected": ["Inside Day"]
+      },
+      "trade_plan": {
+        "entry": 38.97,
+        "stop": 42.56,
+        "risk_per_share": 3.59,
+        "risk_amount": 250,
+        "position_size": 69,
+        "tp1": 35.38,
+        "tp2": 31.79,
+        "stop_valid": true,
+        "stop_ratio": 1.56
+      },
+      "trade_valid": false,
+      "invalid_reasons": [
+        "Stop too wide: 1.56× ATR > 1.5× max"
+      ],
+      "trade_id": null
+    }
+  ],
+  "trades": [
+    {
+      "id": "trade_nvda_001",
+      "setup_id": "setup_nvda_001",
+      "ticker": "NVDA",
+      "direction": "long",
+      "entry": 150.94,
+      "stop": 142.52,
+      "tp1": 159.36,
+      "tp2": 167.78,
+      "position_size": 29,
+      "risk_per_share": 8.42,
+      "risk_amount": 250,
+      "status": "closed",
+      "tp1_hit": true,
+      "current_stop": 150.94,
+      "shares_remaining": 14,
+      "pnl": 358.58,
+      "pnl_r": 1.47,
+      "open_date": "2024-11-25",
+      "close_date": "2024-11-27",
+      "result_type": "tp2",
+      "closed_price": 167.78,
+      "created_at": "2024-11-22T09:30:00Z",
+      "daily_updates": [
+        {
+          "id": "upd_nvda_001",
+          "date": "2024-11-25",
+          "open": 148.20,
+          "high": 153.40,
+          "low": 147.60,
+          "close": 152.10,
+          "is_time_exit": false
+        },
+        {
+          "id": "upd_nvda_002",
+          "date": "2024-11-26",
+          "open": 152.50,
+          "high": 161.80,
+          "low": 151.90,
+          "close": 160.40,
+          "is_time_exit": false
+        },
+        {
+          "id": "upd_nvda_003",
+          "date": "2024-11-27",
+          "open": 160.80,
+          "high": 168.20,
+          "low": 159.50,
+          "close": 167.90,
+          "is_time_exit": false
+        }
+      ]
+    },
+    {
+      "id": "trade_crwd_001",
+      "setup_id": "setup_crwd_001",
+      "ticker": "CRWD",
+      "direction": "long",
+      "entry": 386.65,
+      "stop": 365.10,
+      "tp1": 408.20,
+      "tp2": 429.75,
+      "position_size": 11,
+      "risk_per_share": 21.55,
+      "risk_amount": 250,
+      "status": "closed",
+      "tp1_hit": true,
+      "current_stop": 386.65,
+      "shares_remaining": 5,
+      "pnl": 248.53,
+      "pnl_r": 1.05,
+      "open_date": "2024-11-29",
+      "close_date": "2024-12-02",
+      "result_type": "tp1_only",
+      "closed_price": 386.65,
+      "created_at": "2024-11-27T09:30:00Z",
+      "daily_updates": [
+        {
+          "id": "upd_crwd_001",
+          "date": "2024-11-29",
+          "open": 385.20,
+          "high": 389.40,
+          "low": 381.00,
+          "close": 387.60,
+          "is_time_exit": false
+        },
+        {
+          "id": "upd_crwd_002",
+          "date": "2024-12-02",
+          "open": 388.00,
+          "high": 410.50,
+          "low": 384.20,
+          "close": 394.80,
+          "is_time_exit": false
+        },
+        {
+          "id": "upd_crwd_003",
+          "date": "2024-12-03",
+          "open": 393.50,
+          "high": 395.10,
+          "low": 382.40,
+          "close": 384.20,
+          "is_time_exit": false
+        }
+      ]
+    }
+  ]
+}

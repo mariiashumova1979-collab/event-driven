@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impulse Continuation — Swing Trade Journal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ─── Header ─────────────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">⟳</span>
+        <span class="logo-text">Impulse Continuation</span>
+        <span class="logo-sub">Post-Earnings Swing Journal</span>
+      </div>
+
+      <nav class="tab-nav" role="tablist">
+        <button class="tab-btn active" data-tab="setup"   role="tab">New Setup</button>
+        <button class="tab-btn"        data-tab="result"  role="tab">Setup Result</button>
+        <button class="tab-btn"        data-tab="trades"  role="tab">Active Trades</button>
+        <button class="tab-btn"        data-tab="journal" role="tab">Journal</button>
+        <button class="tab-btn"        data-tab="stats"   role="tab">Stats</button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="btn-export" class="btn btn-ghost btn-sm" title="Export all data as JSON">↑ Export</button>
+        <label class="btn btn-ghost btn-sm" title="Import JSON data">
+          ↓ Import
+          <input type="file" id="import-file" accept=".json" style="display:none">
+        </label>
+        <button id="btn-clear" class="btn btn-danger btn-sm">Clear All</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── Main Content ────────────────────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- ════════════════════════════════════ TAB: NEW SETUP ══════════════════════ -->
+    <section class="tab-section active" id="tab-setup" role="tabpanel">
+      <div class="container">
+        <div class="page-header">
+          <h2>New Setup Analysis</h2>
+          <p class="page-desc">Enter D0 (earnings day) and D+1 (setup day) data to evaluate an impulse continuation setup.</p>
+        </div>
+
+        <form id="setup-form" autocomplete="off" novalidate>
+
+          <!-- Group 1: Trade Config -->
+          <div class="form-section">
+            <div class="form-section-title">Trade Configuration</div>
+            <div class="form-grid form-grid-4">
+              <label class="form-field">
+                <span class="field-label">Ticker</span>
+                <input type="text" name="ticker" placeholder="AAPL" maxlength="10" class="mono" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Direction</span>
+                <select name="direction" required>
+                  <option value="long">Long</option>
+                  <option value="short">Short</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Account Size ($)</span>
+                <input type="number" name="account_size" id="account_size" min="1000" step="500" placeholder="25000" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Risk per Trade (%)</span>
+                <input type="number" name="risk_percent_per_trade" id="risk_percent_per_trade" min="0.1" max="5" step="0.1" placeholder="1.0" required>
+              </label>
+            </div>
+          </div>
+
+          <!-- Group 2: D0 Data -->
+          <div class="form-section">
+            <div class="form-section-title">D0 — Earnings / Impulse Day</div>
+            <div class="form-grid form-grid-3">
+              <label class="form-field">
+                <span class="field-label">Date (D0)</span>
+                <input type="date" name="date_d0">
+              </label>
+              <label class="form-field">
+                <span class="field-label">Previous Close</span>
+                <input type="number" name="close_prev_day" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">ATR14</span>
+                <input type="number" name="atr14" step="0.01" placeholder="0.00" required>
+              </label>
+            </div>
+            <div class="form-grid form-grid-4">
+              <label class="form-field">
+                <span class="field-label">Open D0</span>
+                <input type="number" name="open_d0" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">High D0</span>
+                <input type="number" name="high_d0" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Low D0</span>
+                <input type="number" name="low_d0" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Close D0</span>
+                <input type="number" name="close_d0" step="0.01" placeholder="0.00" required>
+              </label>
+            </div>
+            <div class="form-grid form-grid-3">
+              <label class="form-field">
+                <span class="field-label">Volume D0</span>
+                <input type="number" name="volume_d0" step="1" placeholder="0">
+              </label>
+              <label class="form-field">
+                <span class="field-label">Relative Volume</span>
+                <input type="number" name="relative_volume_d0" step="0.01" placeholder="1.00" required>
+              </label>
+            </div>
+          </div>
+
+          <!-- Group 3: D+1 Data -->
+          <div class="form-section">
+            <div class="form-section-title">D+1 — Setup / Consolidation Day</div>
+            <div class="form-grid form-grid-3">
+              <label class="form-field">
+                <span class="field-label">Date (D+1)</span>
+                <input type="date" name="date_d1">
+              </label>
+              <label class="form-field">
+                <span class="field-label">Open D+1</span>
+                <input type="number" name="open_d1" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field span-empty"></label>
+            </div>
+            <div class="form-grid form-grid-4">
+              <label class="form-field">
+                <span class="field-label">High D+1</span>
+                <input type="number" name="high_d1" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Low D+1</span>
+                <input type="number" name="low_d1" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Close D+1</span>
+                <input type="number" name="close_d1" step="0.01" placeholder="0.00" required>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="reset" class="btn btn-ghost">Reset</button>
+            <button type="submit" class="btn btn-primary btn-lg">Analyze Setup →</button>
+          </div>
+
+        </form>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ TAB: RESULT ═════════════════════════ -->
+    <section class="tab-section" id="tab-result" role="tabpanel">
+      <div class="container">
+        <div id="result-container">
+          <div class="empty-state">
+            <span class="empty-icon">🔎</span>
+            <p>Run an analysis in <strong>New Setup</strong> first</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ TAB: TRADES ═════════════════════════ -->
+    <section class="tab-section" id="tab-trades" role="tabpanel">
+      <div class="container">
+        <div class="page-header">
+          <h2>Active Trades</h2>
+          <p class="page-desc">Track trade progress. Add daily OHLC updates to advance the trade lifecycle automatically.</p>
+        </div>
+        <div id="trades-container">
+          <div class="empty-state">
+            <span class="empty-icon">📭</span>
+            <p>No trades yet. Create one from a valid setup result.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ TAB: JOURNAL ════════════════════════ -->
+    <section class="tab-section" id="tab-journal" role="tabpanel">
+      <div class="container">
+        <div class="page-header">
+          <h2>Journal</h2>
+          <p class="page-desc">Full history of setups and trades with filtering and sorting.</p>
+        </div>
+
+        <!-- Filters -->
+        <div id="journal-filters" class="filters-bar">
+          <label class="filter-field">
+            <span>Ticker</span>
+            <input type="text" name="ticker" placeholder="e.g. NVDA" maxlength="10" class="mono">
+          </label>
+          <label class="filter-field">
+            <span>Trade Status</span>
+            <select name="status">
+              <option value="">All</option>
+              <option value="planned">Planned</option>
+              <option value="active">Active</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span>Pattern</span>
+            <select name="pattern">
+              <option value="">All</option>
+              <option value="Inside Day">Inside Day</option>
+              <option value="Weak Pullback">Weak Pullback</option>
+              <option value="Compression">Compression</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span>Result</span>
+            <select name="result_type">
+              <option value="">All</option>
+              <option value="stop">Stop</option>
+              <option value="tp1_only">TP1 Only</option>
+              <option value="tp2">TP2</option>
+              <option value="time_exit">Time Exit</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Setups table -->
+        <div class="journal-block">
+          <div class="section-label">All Setups</div>
+          <div id="journal-setups">
+            <div class="empty-state compact"><p>No setups yet.</p></div>
+          </div>
+        </div>
+
+        <!-- Trades table -->
+        <div class="journal-block" style="margin-top:2rem">
+          <div class="section-label">All Trades</div>
+          <div id="journal-trades">
+            <div class="empty-state compact"><p>No trades yet.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ TAB: STATS ══════════════════════════ -->
+    <section class="tab-section" id="tab-stats" role="tabpanel">
+      <div class="container">
+        <div class="page-header">
+          <h2>Performance Stats</h2>
+          <p class="page-desc">Aggregated metrics across all closed trades.</p>
+        </div>
+        <div id="stats-container">
+          <div class="empty-state">
+            <span class="empty-icon">📊</span>
+            <p>No closed trades yet. Stats will appear here once trades are completed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /app-main -->
+
+</div><!-- /app -->
+
+<!-- ─── Modal ────────────────────────────────────────────────────────────────── -->
+<div id="modal-backdrop" class="modal-backdrop hidden"></div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <button class="modal-close-x" id="modal-close-btn" aria-label="Close">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ─── Toast ─────────────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- ─── Scripts ───────────────────────────────────────────────────────────────── -->
+<script src="strategy.js"></script>
+<script src="storage.js"></script>
+<script src="ui.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
