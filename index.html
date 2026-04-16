@@ -62,7 +62,7 @@
             <div class="form-grid form-grid-4">
               <label class="form-field">
                 <span class="field-label">Ticker</span>
-                <input type="text" name="ticker" placeholder="AAPL" maxlength="10" class="mono" required>
+                <input type="text" name="ticker" placeholder="AAPL" maxlength="10" class="mono" required oninput="this.value=this.value.toUpperCase()">
               </label>
               <label class="form-field">
                 <span class="field-label">Direction</span>
@@ -88,7 +88,7 @@
             <div class="form-grid form-grid-3">
               <label class="form-field">
                 <span class="field-label">Date (D0)</span>
-                <input type="date" name="date_d0">
+                <input type="date" name="date_d0" id="date_d0">
               </label>
               <label class="form-field">
                 <span class="field-label">Previous Close</span>
@@ -135,7 +135,7 @@
             <div class="form-grid form-grid-3">
               <label class="form-field">
                 <span class="field-label">Date (D+1)</span>
-                <input type="date" name="date_d1">
+                <input type="date" name="date_d1" id="date_d1">
               </label>
               <label class="form-field">
                 <span class="field-label">Open D+1</span>
@@ -208,7 +208,7 @@
         <div id="journal-filters" class="filters-bar">
           <label class="filter-field">
             <span>Ticker</span>
-            <input type="text" name="ticker" placeholder="e.g. NVDA" maxlength="10" class="mono">
+            <input type="text" name="ticker" placeholder="e.g. NVDA" maxlength="10" class="mono" oninput="this.value=this.value.toUpperCase()">
           </label>
           <label class="filter-field">
             <span>Trade Status</span>

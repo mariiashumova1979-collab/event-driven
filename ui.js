@@ -7,6 +7,25 @@ const UI = (() => {
 
   function init(appState) {
     _prefillFormDefaults(appState.data.app_settings);
+    _bindCommaAsDot();
+  }
+
+  /** Allow comma as decimal separator on all number inputs. */
+  function _bindCommaAsDot() {
+    document.addEventListener('keydown', e => {
+      if (e.key !== ',') return;
+      const el = e.target;
+      if (el.tagName !== 'INPUT' || el.type !== 'number') return;
+      e.preventDefault();
+      const start = el.selectionStart;
+      const end   = el.selectionEnd;
+      // Insert dot at cursor position via execCommand (works in most browsers)
+      // Fallback: manipulate value directly
+      if (!document.execCommand('insertText', false, '.')) {
+        el.value = el.value.slice(0, start) + '.' + el.value.slice(end);
+        el.setSelectionRange(start + 1, start + 1);
+      }
+    }, true);
   }
 
   function _prefillFormDefaults(settings) {
@@ -171,9 +190,9 @@ const UI = (() => {
     // ── Full mode (D0 + D1) ────────────────────────────────────────────────────
     const validClass = trade_valid ? 'valid' : 'invalid';
 
-    const patternBadges = d1_pattern.detected.length > 0
-      ? d1_pattern.detected.map(p => `<span class="badge badge-pattern">${p}</span>`).join(' ')
-      : `<span class="badge badge-fail">No Pattern</span>`;
+    const patternBadges = d1_pattern.entry_type
+      ? `<span class="badge badge-pattern">${d1_pattern.entry_type}</span>`
+      : `<span class="badge badge-fail">No Entry Signal</span>`;
 
     const reasonsHtml = invalid_reasons.length
       ? `<div class="invalid-reasons"><strong>Issues:</strong><ul>${invalid_reasons.map(r => `<li>${_esc(r)}</li>`).join('')}</ul></div>`
@@ -238,9 +257,16 @@ const UI = (() => {
           <table class="metrics-table">
             <tr><td>Date D+1</td><td class="mono">${inputs.date_d1 || '—'}</td></tr>
             <tr><td>OHLC D+1</td><td class="mono">${inputs.open_d1} / ${inputs.high_d1} / ${inputs.low_d1} / ${inputs.close_d1}</td></tr>
-            <tr><td>Inside Day</td><td class="mono ${d1_pattern.inside_day ? 'text-ok' : 'text-neutral'}">${d1_pattern.inside_day ? '✓ Yes' : 'No'}</td></tr>
-            <tr><td>Weak Pullback</td><td class="mono ${d1_pattern.weak_pullback ? 'text-ok' : 'text-neutral'}">${d1_pattern.weak_pullback ? '✓ Yes' : 'No'}</td></tr>
-            <tr><td>Compression</td><td class="mono ${d1_pattern.compression ? 'text-ok' : 'text-neutral'}">${d1_pattern.compression ? '✓ Yes' : 'No'}</td></tr>
+            <tr><td>${dir === 'long' ? 'Low > Mid0' : 'Close < Mid0'}</td>
+                <td class="mono ${d1_pattern.price_above_mid ? 'text-ok' : 'text-fail'}">${d1_pattern.price_above_mid ? '✓' : '✗'}</td></tr>
+            <tr><td>${dir === 'long' ? 'Pullback < 50%' : 'Rebound < 50%'}</td>
+                <td class="mono ${d1_pattern.pullback_ok ? 'text-ok' : 'text-fail'}">${d1_pattern.pullback_ok ? '✓' : '✗'}</td></tr>
+            <tr><td>${dir === 'long' ? 'Breakout H0' : 'Breakdown L0'}</td>
+                <td class="mono ${d1_pattern.breakout ? 'text-ok' : 'text-neutral'}">${d1_pattern.breakout ? '✓ Yes' : 'No'}</td></tr>
+            <tr><td>Retest ${dir === 'long' ? 'H0' : 'L0'}</td>
+                <td class="mono ${d1_pattern.retest ? 'text-ok' : 'text-neutral'}">${d1_pattern.retest ? '✓ Yes' : 'No'}</td></tr>
+            ${dir === 'short' ? `<tr><td>Not too far</td>
+                <td class="mono ${d1_pattern.not_too_far ? 'text-ok' : 'text-fail'}">${d1_pattern.not_too_far ? '✓' : '✗'}</td></tr>` : ''}
           </table>
           <div class="pattern-badges">${patternBadges}</div>
         </div>

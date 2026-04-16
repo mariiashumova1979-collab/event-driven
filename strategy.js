@@ -67,43 +67,54 @@ const Strategy = (() => {
   }
 
   function detectD1Pattern(inp, metrics, dir) {
-    const { high_d0, low_d0, high_d1, low_d1, close_d1, close_d0 } = inp;
+    const { high_d0, low_d0, high_d1, low_d1, close_d1 } = inp;
     const { range_d0, mid_d0 } = metrics;
+    const atr = inp.atr14;
 
-    const inside_day = high_d1 <= high_d0 && low_d1 >= low_d0;
-
-    let weak_pullback, compression;
+    let price_above_mid, pullback_ok, breakout, retest, not_too_far;
+    let entry_type = null;
 
     if (dir === 'long') {
-      weak_pullback =
-        low_d1  > mid_d0 &&
-        safe(high_d0 - low_d1, range_d0) < 0.5 &&
-        close_d1 > mid_d0;
-      compression =
-        safe(high_d1 - low_d1, range_d0) < 0.5 &&
-        Math.abs(close_d1 - close_d0) < 0.3 * range_d0 &&
-        close_d1 > mid_d0;
+      // 1. Price holds above Mid0
+      price_above_mid = low_d1 > mid_d0;
+      // 2. Pullback from H0 < 50% of range
+      pullback_ok = safe(high_d0 - low_d1, range_d0) < 0.5;
+      // 3. Breakout above H0
+      breakout = high_d1 > high_d0;
+      // 4. Retest H0 and hold (touched H0 from above, closed above H0)
+      retest = high_d1 >= high_d0 && close_d1 > high_d0;
+
+      if (breakout || retest) entry_type = retest ? 'Retest' : 'Breakout';
+
     } else {
-      weak_pullback =
-        high_d1  < mid_d0 &&
-        safe(high_d1 - low_d0, range_d0) < 0.5 &&
-        close_d1 < mid_d0;
-      compression =
-        safe(high_d1 - low_d1, range_d0) < 0.5 &&
-        Math.abs(close_d1 - close_d0) < 0.3 * range_d0 &&
-        close_d1 < mid_d0;
+      // 1. Price below Mid0
+      price_above_mid = close_d1 < mid_d0;   // reused field — means "price_side_ok"
+      // 2. Rebound < 50%: (H1 - L0) / range < 0.5
+      pullback_ok = safe(high_d1 - low_d0, range_d0) < 0.5;
+      // 3. Breakdown trigger: entry = L0 - 0.1*ATR
+      breakout = low_d1 < low_d0;
+      // 4. Retest from below: H1 >= L0 AND close < L0
+      retest = high_d1 >= low_d0 && close_d1 < low_d0;
+      // 5. Not too far: (L0 - close) / ATR < 0.5
+      not_too_far = atr > 0 ? safe(low_d0 - close_d1, atr) < 0.5 : true;
+
+      if ((breakout || retest) && not_too_far) entry_type = retest ? 'Retest' : 'Breakdown';
     }
 
+    const structure_valid = price_above_mid && pullback_ok && !!(breakout || retest) &&
+      (dir === 'long' ? true : !!not_too_far);
+
     const detected = [];
-    if (inside_day)    detected.push('Inside Day');
-    if (weak_pullback) detected.push('Weak Pullback');
-    if (compression)   detected.push('Compression');
+    if (structure_valid) detected.push(entry_type || (dir === 'long' ? 'Breakout' : 'Breakdown'));
 
     return {
-      inside_day,
-      weak_pullback,
-      compression,
-      structure_valid: inside_day || weak_pullback || compression,
+      price_above_mid,
+      pullback_ok,
+      breakout,
+      retest,
+      not_too_far: dir === 'short' ? not_too_far : true,
+      entry_type,
+      structure_valid,
       detected
     };
   }
@@ -156,13 +167,45 @@ const Strategy = (() => {
       };
     }
 
-    const d0_res     = validateD0(inputs, metrics, dir);
+    const d0_res = validateD0(inputs, metrics, dir);
+
+    // D0-only mode — D1 not provided yet
+    if (!inputs.has_d1) {
+      return {
+        metrics,
+        d0_valid: d0_res.valid,
+        d0_invalid_reasons: d0_res.reasons,
+        d1_pattern: { detected: [], structure_valid: false, inside_day: false, weak_pullback: false, compression: false },
+        trade_plan: { entry: 0, stop: 0, tp1: 0, tp2: 0, position_size: 0, risk_per_share: 0, stop_valid: false },
+        trade_valid: false,
+        invalid_reasons: d0_res.reasons
+      };
+    }
+
     const d1_pattern = detectD1Pattern(inputs, metrics, dir);
     const trade_plan = calculateTradePlan(inputs, metrics, dir);
 
+    const inp = inputs; // alias for brevity in error messages
     const invalid_reasons = [
       ...d0_res.reasons,
-      ...(!d1_pattern.structure_valid ? ['No valid D+1 structure (Inside Day / Weak Pullback / Compression)'] : []),
+      ...(!d1_pattern.price_above_mid
+        ? [dir === 'long'
+            ? `D1 low $${inp.low_d1} ≤ Mid0 $${metrics.mid_d0} — price below midpoint`
+            : `D1 close $${inp.close_d1} ≥ Mid0 $${metrics.mid_d0} — price above midpoint`]
+        : []),
+      ...(!d1_pattern.pullback_ok
+        ? [dir === 'long'
+            ? `Pullback too deep: (H0−L1)/range = ${pct(safe(inp.high_d0 - inp.low_d1, metrics.range_d0))}% ≥ 50%`
+            : `Rebound too deep: (H1−L0)/range = ${pct(safe(inp.high_d1 - inp.low_d0, metrics.range_d0))}% ≥ 50%`]
+        : []),
+      ...(!(d1_pattern.breakout || d1_pattern.retest)
+        ? [dir === 'long'
+            ? `No breakout or retest of H0 ($${inp.high_d0})`
+            : `No breakdown or retest of L0 ($${inp.low_d0})`]
+        : []),
+      ...(dir === 'short' && !d1_pattern.not_too_far
+        ? [`Price too far from L0: (L0−close)/ATR = ${r2(safe(inp.low_d0 - inp.close_d1, inp.atr14))}× ≥ 0.5×`]
+        : []),
       ...(!trade_plan.stop_valid && trade_plan.stop_ratio != null
         ? [`Stop too wide: ${trade_plan.stop_ratio}× ATR > 1.5× max`] : []),
       ...(trade_plan.risk_per_share <= 0 ? ['Risk per share ≤ 0 — check entry/stop calculation'] : [])
