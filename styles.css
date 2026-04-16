@@ -920,3 +920,46 @@ a { color: var(--blue); text-decoration: none; }
 }
 .test-ok    { color: var(--color-green); }
 .test-error { color: var(--color-red); }
+
+/* ── Result History ── */
+.result-history {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.history-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+.history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 4.5rem;
+}
+.history-item:hover { border-color: var(--color-blue); background: var(--bg-hover); }
+.hist-ticker { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.hist-dir    { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; }
+.hist-verdict { font-size: 0.72rem; font-family: var(--font-mono); }
+.hist-ok   .hist-verdict { color: var(--color-green); }
+.hist-fail .hist-verdict { color: var(--color-red); }
+.hist-d0ok .hist-verdict { color: var(--color-blue); }
+
+/* ── D1 conditions rows ── */
+.d1-cond-row { color: var(--text-secondary); line-height: 1.6; }
+.text-lg { font-size: 1.25rem; font-weight: 700; }
