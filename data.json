@@ -107,6 +107,57 @@
       "trade_valid": false,
       "invalid_reasons": [],
       "trade_id": null
+    },
+    {
+      "id": "mo1ym70zh4t5h54",
+      "created_at": "2026-04-16T20:56:34.835Z",
+      "inputs": {
+        "ticker": "VSH",
+        "direction": "long",
+        "date_d0": "2026-04-16",
+        "open_d0": 23.75,
+        "high_d0": 26.38,
+        "low_d0": 23.7,
+        "close_d0": 26.25,
+        "volume_d0": 6.83,
+        "relative_volume_d0": 3.34,
+        "close_prev_day": 23.76,
+        "atr14": 4.31,
+        "has_d1": false,
+        "date_d1": null,
+        "open_d1": null,
+        "high_d1": null,
+        "low_d1": null,
+        "close_d1": null,
+        "account_size": 11900,
+        "risk_percent_per_trade": 1
+      },
+      "metrics": {
+        "range_d0": 2.68,
+        "mid_d0": 25.04,
+        "impulse": 0.1048,
+        "body": 0.9328,
+        "clv_long": 0.9515,
+        "clv_short": 0.0485
+      },
+      "d0_valid": true,
+      "d0_invalid_reasons": [],
+      "d1_pattern": {
+        "detected": [],
+        "structure_valid": false
+      },
+      "trade_plan": {
+        "entry": 26.811,
+        "stop": null,
+        "tp1": null,
+        "tp2": null,
+        "position_size": null,
+        "risk_per_share": null,
+        "stop_valid": null
+      },
+      "trade_valid": false,
+      "invalid_reasons": [],
+      "trade_id": null
     }
   ],
   "trades": [],
