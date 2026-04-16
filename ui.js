@@ -119,6 +119,7 @@ const UI = (() => {
 
     // ── D0-only mode ──────────────────────────────────────────────────────────
     if (!inputs.has_d1) {
+      console.log('[D0-only] rendering D0-only mode', { entry: result.trade_plan?.entry, d1_conditions: result.d1_conditions });
       const d0StatusClass = d0_valid ? 'valid' : 'invalid';
       const d0Verdict = d0_valid ? 'D0 PASS — ADD D+1' : 'D0 FAIL';
       const entry = result.trade_plan?.entry;

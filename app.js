@@ -56,6 +56,7 @@ const App = (() => {
 
   function analyzeSetup(inputs) {
     const result = Strategy.evaluateSetup(inputs);
+    console.log('[analyzeSetup] has_d1:', inputs.has_d1, '| d1_conditions:', result.d1_conditions, '| entry:', result.trade_plan?.entry);
     const newResult = { inputs, ...result };
 
     // Push current to history before replacing
