@@ -105,7 +105,7 @@ const UI = (() => {
 
   // ─── Setup Result ────────────────────────────────────────────────────────────
 
-  function renderSetupResult(result, saved, savedId) {
+  function renderSetupResult(result, saved, savedId, history) {
     const el = document.getElementById('result-container');
     if (!result) {
       el.innerHTML = `<div class="empty-state"><span class="empty-icon">🔎</span><p>Run an analysis in <strong>New Setup</strong> first</p></div>`;
@@ -121,6 +121,8 @@ const UI = (() => {
     if (!inputs.has_d1) {
       const d0StatusClass = d0_valid ? 'valid' : 'invalid';
       const d0Verdict = d0_valid ? 'D0 PASS — ADD D+1' : 'D0 FAIL';
+      const entry = result.trade_plan?.entry;
+      const cond  = result.d1_conditions || {};
 
       const saveBtn = saved
         ? `<button class="btn btn-ghost" disabled>✓ Saved to Journal</button>`
@@ -129,6 +131,10 @@ const UI = (() => {
       const reasonsHtml = d0_invalid_reasons.length
         ? `<div class="invalid-reasons"><strong>Issues:</strong><ul>${d0_invalid_reasons.map(r => `<li>${_esc(r)}</li>`).join('')}</ul></div>`
         : '';
+
+      const condRows = Object.values(cond).map(v =>
+        `<tr><td class="mono text-sm d1-cond-row">${_esc(v)}</td></tr>`
+      ).join('');
 
       el.innerHTML = `
         <div class="result-header">
@@ -172,22 +178,27 @@ const UI = (() => {
               : ''}
           </div>
 
-          <div class="result-card d1-pending-card ${d0_valid ? '' : 'card-muted'}">
-            <div class="card-title">D+1 — Pending</div>
-            <div class="d1-pending-body">
-              ${d0_valid
-                ? `<div class="d1-pending-icon">⏳</div>
-                   <p class="d1-pending-msg">D0 validated. Return after market close tomorrow and add D+1 data to complete the setup analysis and generate a trade plan.</p>`
-                : `<div class="d1-pending-icon muted">✗</div>
-                   <p class="d1-pending-msg muted">D0 failed validation. D+1 analysis is not required.</p>`
-              }
-            </div>
+          <div class="result-card ${d0_valid ? '' : 'card-muted'}">
+            <div class="card-title">D+1 — Conditions to Watch</div>
+            <table class="metrics-table">${condRows}</table>
           </div>
-        </div>`;
+
+          <div class="result-card highlight-card ${d0_valid ? '' : 'card-muted'}">
+            <div class="card-title">Entry Price</div>
+            <table class="metrics-table">
+              <tr><td>${dir === 'long' ? 'Buy Stop' : 'Sell Stop'}</td>
+                  <td class="mono text-entry text-lg">$${entry}</td></tr>
+              <tr><td>${dir === 'long' ? 'H0' : 'L0'}</td>
+                  <td class="mono">${dir === 'long' ? '$'+inputs.high_d0 : '$'+inputs.low_d0}</td></tr>
+              <tr><td>ATR14</td><td class="mono">${inputs.atr14}</td></tr>
+              <tr><td>Stop / TP</td><td class="mono text-muted">after D+1</td></tr>
+              <tr><td>Position</td><td class="mono text-muted">after D+1</td></tr>
+            </table>
+          </div>
+        </div>
+      ${_renderResultHistory(history)}`;
       return;
     }
-
-    // ── Full mode (D0 + D1) ────────────────────────────────────────────────────
     const validClass = trade_valid ? 'valid' : 'invalid';
 
     const patternBadges = d1_pattern.entry_type
@@ -285,7 +296,28 @@ const UI = (() => {
           </table>
         </div>
 
-      </div>`;
+      </div>
+      ${_renderResultHistory(history)}`;
+  }
+
+  function _renderResultHistory(history) {
+    if (!history || history.length === 0) return '';
+    const items = history.map((entry, i) => {
+      const r   = entry.result;
+      const dir = r.inputs?.direction || '';
+      const ticker = r.inputs?.ticker || '—';
+      const d0ok = r.d0_valid;
+      const full = r.inputs?.has_d1;
+      const valid = r.trade_valid;
+      const verdict = !full ? (d0ok ? 'D0 ✓' : 'D0 ✗') : (valid ? '✓' : '✗');
+      const cls = !full ? (d0ok ? 'hist-d0ok' : 'hist-fail') : (valid ? 'hist-ok' : 'hist-fail');
+      return `<button class="history-item ${cls}" data-history-index="${i}" title="Load ${ticker} ${dir}">
+        <span class="hist-ticker">${_esc(ticker)}</span>
+        <span class="hist-dir">${dir}</span>
+        <span class="hist-verdict">${verdict}</span>
+      </button>`;
+    }).join('');
+    return `<div class="result-history"><span class="history-label">History</span>${items}</div>`;
   }
 
   function _impulseClass(impulse, dir) {
@@ -517,6 +549,7 @@ const UI = (() => {
                 <td>${s.trade_id
                   ? '<span class="badge badge-linked">Linked</span>'
                   : (s.trade_valid ? `<button class="btn btn-xs btn-success btn-create-trade-from-journal" data-setup-id="${s.id}">+ Trade</button>` : '<span class="text-muted">—</span>')}</td>
+                <td><button class="btn btn-xs btn-outline btn-view-setup" data-setup-id="${s.id}" title="View in Result tab">View</button></td>
                 <td><button class="btn-icon btn-delete-setup" data-setup-id="${s.id}" title="Delete">✕</button></td>
               </tr>`).join('')}
           </tbody>

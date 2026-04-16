@@ -171,12 +171,33 @@ const Strategy = (() => {
 
     // D0-only mode — D1 not provided yet
     if (!inputs.has_d1) {
+      const { high_d0, low_d0, atr14 } = inputs;
+      const { range_d0, mid_d0 } = metrics;
+
+      // Entry price is D0-based — doesn't need D1
+      const entry = r4(dir === 'long' ? high_d0 + 0.1 * atr14 : low_d0 - 0.1 * atr14);
+
+      // Pre-calculate D1 thresholds so user knows what to watch for
+      const d1_conditions = dir === 'long' ? {
+        price_threshold:   `Low D1 > ${mid_d0} (Mid0)`,
+        pullback_max:      `Low D1 > ${r4(high_d0 - 0.5 * range_d0)} (H0 − 50% range)`,
+        breakout_trigger:  `High D1 > ${high_d0} (H0) → entry above ${entry}`,
+        retest_trigger:    `High D1 ≥ ${high_d0} AND Close D1 > ${high_d0}`,
+      } : {
+        price_threshold:   `Close D1 < ${mid_d0} (Mid0)`,
+        pullback_max:      `High D1 < ${r4(low_d0 + 0.5 * range_d0)} (L0 + 50% range)`,
+        breakdown_trigger: `Low D1 < ${low_d0} (L0) → entry at ${entry}`,
+        retest_trigger:    `High D1 ≥ ${low_d0} AND Close D1 < ${low_d0}`,
+        not_too_far:       `Close D1 > ${r4(low_d0 - 0.5 * atr14)} (L0 − 0.5×ATR)`,
+      };
+
       return {
         metrics,
         d0_valid: d0_res.valid,
         d0_invalid_reasons: d0_res.reasons,
-        d1_pattern: { detected: [], structure_valid: false, inside_day: false, weak_pullback: false, compression: false },
-        trade_plan: { entry: 0, stop: 0, tp1: 0, tp2: 0, position_size: 0, risk_per_share: 0, stop_valid: false },
+        d1_pattern: { detected: [], structure_valid: false },
+        trade_plan: { entry, stop: null, tp1: null, tp2: null, position_size: null, risk_per_share: null, stop_valid: null },
+        d1_conditions,
         trade_valid: false,
         invalid_reasons: d0_res.reasons
       };

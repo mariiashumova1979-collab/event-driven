@@ -10,6 +10,7 @@ const App = (() => {
     lastResult:       null,   // most recent evaluateSetup() output + inputs
     lastResultSaved:  false,
     lastSavedSetupId: null,   // ID of the last setup persisted
+    resultHistory:    [],     // last 10 analyzed setups
     activeTab:        'setup',
     journalFilters:   { ticker: '', status: '', pattern: '', result_type: '' },
     journalSort:      { col: 'created_at', dir: 'desc' }
@@ -54,12 +55,24 @@ const App = (() => {
   // ─── Setup Actions ────────────────────────────────────────────────────────────
 
   function analyzeSetup(inputs) {
-    const result       = Strategy.evaluateSetup(inputs);
-    state.lastResult   = { inputs, ...result };
+    const result = Strategy.evaluateSetup(inputs);
+    const newResult = { inputs, ...result };
+
+    // Push current to history before replacing
+    if (state.lastResult) {
+      state.resultHistory.unshift({
+        result:  state.lastResult,
+        saved:   state.lastResultSaved,
+        savedId: state.lastSavedSetupId
+      });
+      if (state.resultHistory.length > 10) state.resultHistory.pop();
+    }
+
+    state.lastResult       = newResult;
     state.lastResultSaved  = false;
     state.lastSavedSetupId = null;
     _switchTab('result');
-    UI.renderSetupResult(state.lastResult, false, null);
+    UI.renderSetupResult(state.lastResult, false, null, state.resultHistory);
   }
 
   function saveSetup() {
@@ -85,7 +98,7 @@ const App = (() => {
     state.lastResultSaved  = true;
     state.lastSavedSetupId = id;
     save();
-    UI.renderSetupResult(state.lastResult, true, id);
+    UI.renderSetupResult(state.lastResult, true, id, state.resultHistory);
     UI.showToast('Setup saved to journal', 'success');
     return id;
   }
@@ -239,6 +252,54 @@ const App = (() => {
     UI.showToast('Setup deleted', 'info');
   }
 
+  // ─── Result History ───────────────────────────────────────────────────────────
+
+  function loadResultFromHistory(index) {
+    const entry = state.resultHistory[index];
+    if (!entry) return;
+
+    // Push current back to history at that position (swap)
+    if (state.lastResult) {
+      state.resultHistory[index] = {
+        result:  state.lastResult,
+        saved:   state.lastResultSaved,
+        savedId: state.lastSavedSetupId
+      };
+    } else {
+      state.resultHistory.splice(index, 1);
+    }
+
+    state.lastResult       = entry.result;
+    state.lastResultSaved  = entry.saved;
+    state.lastSavedSetupId = entry.savedId;
+    _switchTab('result');
+    UI.renderSetupResult(state.lastResult, state.lastResultSaved, state.lastSavedSetupId, state.resultHistory);
+  }
+
+  function loadResultFromSetup(setupId) {
+    const setup = state.data.setups.find(s => s.id === setupId);
+    if (!setup) { UI.showToast('Setup not found', 'error'); return; }
+
+    // Push current to history
+    if (state.lastResult) {
+      state.resultHistory.unshift({
+        result:  state.lastResult,
+        saved:   state.lastResultSaved,
+        savedId: state.lastSavedSetupId
+      });
+      if (state.resultHistory.length > 10) state.resultHistory.pop();
+    }
+
+    state.lastResult       = { inputs: setup.inputs, metrics: setup.metrics, d0_valid: setup.d0_valid,
+                                d0_invalid_reasons: setup.d0_invalid_reasons, d1_pattern: setup.d1_pattern,
+                                trade_plan: setup.trade_plan, trade_valid: setup.trade_valid,
+                                invalid_reasons: setup.invalid_reasons };
+    state.lastResultSaved  = true;
+    state.lastSavedSetupId = setup.id;
+    _switchTab('result');
+    UI.renderSetupResult(state.lastResult, true, setup.id, state.resultHistory);
+  }
+
   // ─── GitHub Sync ─────────────────────────────────────────────────────────────
 
   function _setSyncStatus(state) {
@@ -378,7 +439,7 @@ const App = (() => {
   function _switchTab(tab) {
     state.activeTab = tab;
     UI.renderTab(tab);
-    if (tab === 'result')  UI.renderSetupResult(state.lastResult, state.lastResultSaved, state.lastSavedSetupId);
+    if (tab === 'result')  UI.renderSetupResult(state.lastResult, state.lastResultSaved, state.lastSavedSetupId, state.resultHistory);
     if (tab === 'trades')  UI.renderTrades(state.data);
     if (tab === 'journal') UI.renderJournal(state.data, state.journalFilters, state.journalSort);
     if (tab === 'stats')   UI.renderStats(Strategy.computeStats(state.data.setups, state.data.trades));
@@ -456,6 +517,11 @@ const App = (() => {
       if (e.target.id === 'btn-save-only') {
         saveSetup();
       }
+      // History item click
+      if (e.target.closest('.history-item')) {
+        const idx = parseInt(e.target.closest('.history-item').dataset.historyIndex);
+        if (!isNaN(idx)) loadResultFromHistory(idx);
+      }
     });
 
     // ── Trades tab (delegated) ──
@@ -506,6 +572,9 @@ const App = (() => {
       }
       if (e.target.classList.contains('btn-create-trade-from-journal')) {
         createTradeFromSetup(e.target.dataset.setupId);
+      }
+      if (e.target.classList.contains('btn-view-setup')) {
+        loadResultFromSetup(e.target.dataset.setupId);
       }
     });
 
