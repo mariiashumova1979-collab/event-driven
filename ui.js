@@ -670,6 +670,7 @@ const UI = (() => {
   }
 
 
+  function openModal(html) {
     if (html) document.getElementById('modal-content').innerHTML = html;
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modal-backdrop').classList.remove('hidden');
