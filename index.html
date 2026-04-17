@@ -54,6 +54,19 @@
           <p class="page-desc">Enter D0 (earnings day) and D+1 (setup day) data to evaluate an impulse continuation setup.</p>
         </div>
 
+        <!-- CSV Import — outside form -->
+        <div class="form-section csv-import-section">
+          <div class="form-section-title">Import from CSV <span class="section-optional">Symbol,Date,Time,Open,High,Low,Close,Volume</span></div>
+          <div class="csv-import-bar">
+            <label class="btn btn-ghost btn-sm csv-upload-label">
+              📂 Load CSV
+              <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none">
+            </label>
+            <span id="csv-filename" class="csv-filename"></span>
+          </div>
+          <div id="csv-preview" class="csv-preview hidden"></div>
+        </div>
+
         <form id="setup-form" autocomplete="off" novalidate>
 
           <!-- Group 1: Trade Config -->
@@ -80,19 +93,6 @@
                 <input type="number" name="risk_percent_per_trade" id="risk_percent_per_trade" min="0.1" max="5" step="0.1" placeholder="1.0" required>
               </label>
             </div>
-          </div>
-
-          <!-- CSV Import -->
-          <div class="form-section csv-import-section">
-            <div class="form-section-title">Import from CSV <span class="section-optional">Symbol,Date,Time,Open,High,Low,Close,Volume</span></div>
-            <div class="csv-import-bar">
-              <label class="btn btn-ghost btn-sm csv-upload-label">
-                📂 Load CSV
-                <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none">
-              </label>
-              <span id="csv-filename" class="csv-filename"></span>
-            </div>
-            <div id="csv-preview" class="csv-preview hidden"></div>
           </div>
 
           <!-- Group 2: D0 Data -->
