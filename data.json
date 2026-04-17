@@ -15,11 +15,11 @@
         "relative_volume_d0": 3.34,
         "close_prev_day": 23.76,
         "atr14": 4.31,
-        "has_d1": false,
-        "date_d1": null,
-        "open_d1": null,
-        "high_d1": null,
-        "low_d1": null,
+        "has_d1": true,
+        "date_d1": "2026-04-18",
+        "open_d1": 27,
+        "high_d1": 27.02,
+        "low_d1": 25.77,
         "close_d1": null,
         "account_size": 11900,
         "risk_percent_per_trade": 1
@@ -35,23 +35,30 @@
       "d0_valid": true,
       "d0_invalid_reasons": [],
       "d1_pattern": {
-        "detected": [],
-        "structure_valid": false
+        "price_above_mid": true,
+        "pullback_ok": true,
+        "breakout": true,
+        "retest": false,
+        "not_too_far": true,
+        "entry_type": "Breakout",
+        "structure_valid": true,
+        "provisional": true,
+        "detected": [
+          "Breakout"
+        ]
       },
       "trade_plan": {
         "entry": 26.811,
-        "stop_est": 22.07,
-        "rps_est": 4.741,
-        "pos_est": 25,
+        "stop": 24.908,
+        "risk_per_share": 1.903,
         "risk_amount": 119,
-        "stop": null,
-        "tp1": null,
-        "tp2": null,
-        "position_size": null,
-        "risk_per_share": null,
-        "stop_valid": null
+        "position_size": 62,
+        "tp1": 28.714,
+        "tp2": 30.617,
+        "stop_valid": true,
+        "stop_ratio": 0.44
       },
-      "trade_valid": false,
+      "trade_valid": true,
       "invalid_reasons": [],
       "trade_id": null
     }
