@@ -58,10 +58,8 @@
         <div class="form-section csv-import-section">
           <div class="form-section-title">Import from CSV <span class="section-optional">Symbol,Date,Time,Open,High,Low,Close,Volume</span></div>
           <div class="csv-import-bar">
-            <label class="btn btn-ghost btn-sm csv-upload-label">
-              📂 Load CSV
-              <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none">
-            </label>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('csv-file-input').click()">📂 Load CSV</button>
+            <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="UI.handleCsvFile(this)">
             <span id="csv-filename" class="csv-filename"></span>
           </div>
           <div id="csv-preview" class="csv-preview hidden"></div>

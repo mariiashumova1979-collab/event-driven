@@ -14,22 +14,22 @@ const UI = (() => {
   // ─── CSV Import ──────────────────────────────────────────────────────────────
 
   function _bindCsvImport() {
-    const input = document.getElementById('csv-file-input');
-    if (!input) { console.warn('[CSV] input not found'); return; }
-    input.addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      console.log('[CSV] loading:', file.name, file.size, 'bytes');
-      document.getElementById('csv-filename').textContent = file.name;
-      try {
-        const text = await file.text();
-        console.log('[CSV] text loaded, length:', text.length);
-        _parseCsvAndPreview(text);
-      } catch(err) {
-        console.error('[CSV] error:', err);
-        showToast('Failed to read file: ' + err.message, 'error');
-      }
-    });
+    // binding now handled via inline onchange in HTML → UI.handleCsvFile()
+  }
+
+  async function handleCsvFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    console.log('[CSV] file selected:', file.name, file.size);
+    document.getElementById('csv-filename').textContent = file.name;
+    try {
+      const text = await file.text();
+      console.log('[CSV] read ok, chars:', text.length);
+      _parseCsvAndPreview(text);
+    } catch(err) {
+      console.error('[CSV] error:', err);
+      showToast('CSV error: ' + err.message, 'error');
+    }
   }
 
   function _parseCsvAndPreview(text) {
@@ -887,7 +887,7 @@ const UI = (() => {
   return {
     init, renderTab, collectFormInputs,
     renderSetupResult, renderTrades, renderJournal, renderStats,
-    showUpdateModal, showD1Modal, openModal, closeModal, showToast
+    showUpdateModal, showD1Modal, openModal, closeModal, showToast, handleCsvFile
   };
 
 })();
