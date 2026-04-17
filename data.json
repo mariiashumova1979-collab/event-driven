@@ -60,10 +60,36 @@
       },
       "trade_valid": true,
       "invalid_reasons": [],
-      "trade_id": null
+      "trade_id": "mo3337ooiksfw9y"
     }
   ],
-  "trades": [],
+  "trades": [
+    {
+      "id": "mo3337ooiksfw9y",
+      "setup_id": "mo2nzezoulqomm0",
+      "ticker": "VSH",
+      "direction": "long",
+      "entry": 26.811,
+      "stop": 24.908,
+      "tp1": 28.714,
+      "tp2": 30.617,
+      "position_size": 62,
+      "risk_per_share": 1.903,
+      "risk_amount": 119,
+      "status": "planned",
+      "tp1_hit": false,
+      "current_stop": 24.908,
+      "shares_remaining": 62,
+      "pnl": null,
+      "pnl_r": null,
+      "open_date": null,
+      "close_date": null,
+      "result_type": null,
+      "closed_price": null,
+      "daily_updates": [],
+      "created_at": "2026-04-17T15:49:33.480Z"
+    }
+  ],
   "app_settings": {
     "default_account_size": 25000,
     "default_risk_percent": 1
