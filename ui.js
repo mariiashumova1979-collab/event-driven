@@ -891,3 +891,16 @@ const UI = (() => {
   };
 
 })();
+
+// Wire CSV file input after DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  var csvInput = document.getElementById('csv-file-input');
+  if (csvInput) {
+    csvInput.addEventListener('change', function() {
+      UI.handleCsvFile(this);
+    });
+    console.log('[CSV] input listener attached');
+  } else {
+    console.warn('[CSV] input element not found on DOMContentLoaded');
+  }
+});
