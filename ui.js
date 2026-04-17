@@ -15,15 +15,22 @@ const UI = (() => {
 
   function _bindCsvImport() {
     const input = document.getElementById('csv-file-input');
-    if (!input) return;
-    input.addEventListener('change', e => {
+    if (!input) { console.warn('[CSV] csv-file-input not found'); return; }
+    input.addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
       document.getElementById('csv-filename').textContent = file.name;
       const reader = new FileReader();
-      reader.onload = ev => _parseCsvAndPreview(ev.target.result);
-      reader.readAsText(file);
-      e.target.value = '';
+      reader.onerror = () => showToast('Failed to read file', 'error');
+      reader.onload = function(ev) {
+        try {
+          _parseCsvAndPreview(ev.target.result);
+        } catch(err) {
+          console.error('[CSV] parse error:', err);
+          showToast('CSV parse error: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
     });
   }
 
@@ -31,46 +38,61 @@ const UI = (() => {
     const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
     if (lines.length < 2) { showToast('CSV is empty or unreadable', 'error'); return; }
 
-    // Detect header
     const header = lines[0].toLowerCase();
-    const hasHeader = header.includes('date') || header.includes('open');
+    const hasHeader = header.includes('date') || header.includes('open') || header.includes('symbol');
     const dataLines = hasHeader ? lines.slice(1) : lines;
 
-    const rows = dataLines.map(line => {
+    const rows = [];
+    for (const line of dataLines) {
       const cols = line.split(',');
-      // Format: Symbol,Date,Time,Open,High,Low,Close,Volume
+      let row = null;
+      // Symbol,Date,Time,Open,High,Low,Close,Volume  (8 cols)
       if (cols.length >= 8) {
-        return { symbol: cols[0].replace(/\..*$/, '').toUpperCase(), date: cols[1], open: +cols[3], high: +cols[4], low: +cols[5], close: +cols[6], volume: +cols[7] };
+        row = {
+          symbol: cols[0].replace(/\..*$/, '').toUpperCase(),
+          date:   cols[1].trim(),
+          open:   parseFloat(cols[3]),
+          high:   parseFloat(cols[4]),
+          low:    parseFloat(cols[5]),
+          close:  parseFloat(cols[6]),
+          volume: parseFloat(cols[7]) || 0
+        };
+      // Date,Open,High,Low,Close,Volume  (6 cols, no symbol/time)
+      } else if (cols.length >= 6) {
+        row = {
+          symbol: '',
+          date:   cols[0].trim(),
+          open:   parseFloat(cols[1]),
+          high:   parseFloat(cols[2]),
+          low:    parseFloat(cols[3]),
+          close:  parseFloat(cols[4]),
+          volume: parseFloat(cols[5]) || 0
+        };
       }
-      // Fallback: Date,Open,High,Low,Close,Volume (no symbol/time)
-      if (cols.length >= 6) {
-        return { symbol: '', date: cols[0], open: +cols[1], high: +cols[2], low: +cols[3], close: +cols[4], volume: +cols[5] };
-      }
-      return null;
-    }).filter(r => r && r.date && !isNaN(r.open));
+      if (row && row.date && !isNaN(row.open) && !isNaN(row.close)) rows.push(row);
+    }
 
     if (rows.length === 0) { showToast('No valid rows found in CSV', 'error'); return; }
-
-    // Sort ascending by date
     rows.sort((a, b) => a.date < b.date ? -1 : 1);
-
     _renderCsvPreview(rows);
   }
 
   function _renderCsvPreview(rows) {
     const el = document.getElementById('csv-preview');
+    if (!el) return;
+
     const rowsHtml = rows.map((r, i) => `
-      <tr>
+      <tr data-idx="${i}">
         <td class="mono text-sm">${r.date}</td>
         <td class="mono text-sm">${r.symbol || '—'}</td>
         <td class="mono text-sm">${r.open}</td>
         <td class="mono text-sm">${r.high}</td>
         <td class="mono text-sm">${r.low}</td>
         <td class="mono text-sm">${r.close}</td>
-        <td class="mono text-sm">${_fmtVol(r.volume)}</td>
-        <td>
-          <button class="btn btn-xs btn-outline csv-set-d0" data-idx="${i}">D0</button>
-          <button class="btn btn-xs btn-ghost csv-set-d1" data-idx="${i}">D+1</button>
+        <td class="mono text-sm">${r.volume > 0 ? r.volume.toLocaleString() : '—'}</td>
+        <td class="csv-btns">
+          <button type="button" class="btn btn-xs btn-outline csv-set-d0" data-idx="${i}">D0</button>
+          <button type="button" class="btn btn-xs btn-ghost csv-set-d1" data-idx="${i}">D+1</button>
         </td>
       </tr>`).join('');
 
@@ -83,40 +105,44 @@ const UI = (() => {
       </table>`;
     el.classList.remove('hidden');
 
-    // Store rows on element for event delegation
-    el._csvRows = rows;
-
-    el.addEventListener('click', e => {
-      const idx = parseInt(e.target.dataset.idx);
-      if (isNaN(idx)) return;
+    // Remove old listener by replacing element clone
+    const tbody = el.querySelector('tbody');
+    tbody.addEventListener('click', function(e) {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const idx = parseInt(btn.dataset.idx);
+      if (isNaN(idx) || idx < 0 || idx >= rows.length) return;
       const r = rows[idx];
       const f = document.getElementById('setup-form');
-      const set = (name, val) => { const inp = f.querySelector(`[name="${name}"]`); if (inp) inp.value = val; };
+      const set = (name, val) => {
+        const inp = f ? f.querySelector(`[name="${name}"]`) : null;
+        if (inp) inp.value = val;
+      };
 
-      if (e.target.classList.contains('csv-set-d0')) {
+      if (btn.classList.contains('csv-set-d0')) {
         set('date_d0',  r.date);
         set('open_d0',  r.open);
         set('high_d0',  r.high);
         set('low_d0',   r.low);
         set('close_d0', r.close);
-        set('volume_d0', r.volume);
-        // Previous close = row above
+        set('volume_d0', r.volume || '');
         if (idx > 0) set('close_prev_day', rows[idx - 1].close);
-        // Ticker from symbol if field is empty
-        if (r.symbol) { const t = f.querySelector('[name="ticker"]'); if (t && !t.value) t.value = r.symbol; }
-        // Highlight row
-        el.querySelectorAll('tr').forEach(tr => tr.classList.remove('csv-row-d0', 'csv-row-d1'));
+        if (r.symbol) {
+          const t = f ? f.querySelector('[name="ticker"]') : null;
+          if (t && !t.value) t.value = r.symbol;
+        }
+        el.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('csv-row-d0'));
         e.target.closest('tr').classList.add('csv-row-d0');
         showToast('D0 filled — enter ATR14 and RelVol manually', 'info');
       }
 
-      if (e.target.classList.contains('csv-set-d1')) {
+      if (btn.classList.contains('csv-set-d1')) {
         set('date_d1',  r.date);
         set('open_d1',  r.open);
         set('high_d1',  r.high);
         set('low_d1',   r.low);
         set('close_d1', r.close);
-        el.querySelectorAll('tr').forEach(tr => tr.classList.remove('csv-row-d1'));
+        el.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('csv-row-d1'));
         e.target.closest('tr').classList.add('csv-row-d1');
         showToast('D+1 filled', 'success');
       }
