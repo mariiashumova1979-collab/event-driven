@@ -67,9 +67,14 @@ const Strategy = (() => {
   }
 
   function detectD1Pattern(inp, metrics, dir) {
-    const { high_d0, low_d0, high_d1, low_d1, close_d1 } = inp;
+    const { high_d0, low_d0, high_d1, low_d1 } = inp;
     const { range_d0, mid_d0 } = metrics;
     const atr = inp.atr14;
+
+    // If close_d1 not provided (intraday), use midpoint of day's range as proxy
+    const close_d1_provided = inp.close_d1 != null;
+    const close_d1 = close_d1_provided ? inp.close_d1 : (high_d1 + low_d1) / 2;
+    const provisional = !close_d1_provided;
 
     let price_above_mid, pullback_ok, breakout, retest, not_too_far;
     let entry_type = null;
@@ -79,23 +84,23 @@ const Strategy = (() => {
       price_above_mid = low_d1 > mid_d0;
       // 2. Pullback from H0 < 50% of range
       pullback_ok = safe(high_d0 - low_d1, range_d0) < 0.5;
-      // 3. Breakout above H0
+      // 3. Breakout above H0 — needs only high_d1
       breakout = high_d1 > high_d0;
-      // 4. Retest H0 and hold (touched H0 from above, closed above H0)
-      retest = high_d1 >= high_d0 && close_d1 > high_d0;
+      // 4. Retest H0 and hold — needs close_d1 (skip if provisional)
+      retest = close_d1_provided && high_d1 >= high_d0 && close_d1 > high_d0;
 
       if (breakout || retest) entry_type = retest ? 'Retest' : 'Breakout';
 
     } else {
-      // 1. Price below Mid0
-      price_above_mid = close_d1 < mid_d0;   // reused field — means "price_side_ok"
+      // 1. Price below Mid0 — uses close (or proxy)
+      price_above_mid = close_d1 < mid_d0;
       // 2. Rebound < 50%: (H1 - L0) / range < 0.5
       pullback_ok = safe(high_d1 - low_d0, range_d0) < 0.5;
-      // 3. Breakdown trigger: entry = L0 - 0.1*ATR
+      // 3. Breakdown trigger — needs only low_d1
       breakout = low_d1 < low_d0;
-      // 4. Retest from below: H1 >= L0 AND close < L0
-      retest = high_d1 >= low_d0 && close_d1 < low_d0;
-      // 5. Not too far: (L0 - close) / ATR < 0.5
+      // 4. Retest from below — needs close_d1
+      retest = close_d1_provided && high_d1 >= low_d0 && close_d1 < low_d0;
+      // 5. Not too far — uses close (or proxy)
       not_too_far = atr > 0 ? safe(low_d0 - close_d1, atr) < 0.5 : true;
 
       if ((breakout || retest) && not_too_far) entry_type = retest ? 'Retest' : 'Breakdown';
@@ -115,6 +120,7 @@ const Strategy = (() => {
       not_too_far: dir === 'short' ? not_too_far : true,
       entry_type,
       structure_valid,
+      provisional,
       detected
     };
   }

@@ -1012,3 +1012,9 @@ a { color: var(--blue); text-decoration: none; }
 .csv-table tr:hover td { background: var(--bg-hover); }
 .csv-row-d0 td { background: rgba(59,130,246,0.08) !important; }
 .csv-row-d1 td { background: rgba(16,185,129,0.08) !important; }
+
+.verdict-provisional {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}

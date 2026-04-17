@@ -205,9 +205,11 @@ const UI = (() => {
     const ticker = v('ticker');
     if (!ticker) { showToast('Ticker is required', 'error'); return null; }
 
-    // Detect if D1 data was entered (all 4 OHLC fields filled)
-    const d1_vals = ['open_d1','high_d1','low_d1','close_d1'].map(k => v(k));
-    const has_d1  = d1_vals.every(val => val !== '' && val != null && !isNaN(parseFloat(val)));
+    // Detect if D1 data was entered (OHL required, close optional)
+    const d1_ohl = ['open_d1','high_d1','low_d1'].map(k => v(k));
+    const has_d1 = d1_ohl.every(val => val !== '' && val != null && !isNaN(parseFloat(val)));
+    const close_d1_raw = v('close_d1');
+    const has_close_d1 = close_d1_raw !== '' && close_d1_raw != null && !isNaN(parseFloat(close_d1_raw));
 
     const inputs = {
       ticker:               ticker.toUpperCase(),
@@ -226,7 +228,7 @@ const UI = (() => {
       open_d1:              has_d1 ? n('open_d1')   : null,
       high_d1:              has_d1 ? n('high_d1')   : null,
       low_d1:               has_d1 ? n('low_d1')    : null,
-      close_d1:             has_d1 ? n('close_d1')  : null,
+      close_d1:             has_d1 ? (has_close_d1 ? n('close_d1') : null) : null,
       account_size:         n('account_size'),
       risk_percent_per_trade: n('risk_percent_per_trade')
     };
@@ -377,6 +379,7 @@ const UI = (() => {
           <span class="ticker-tag">${_esc(inputs.ticker)}</span>
           <span class="dir-badge dir-${dir}">${dir.toUpperCase()}</span>
           <span class="verdict-badge verdict-${validClass}">${trade_valid ? 'VALID SETUP' : 'INVALID SETUP'}</span>
+          ${d1_pattern.provisional ? '<span class="verdict-badge verdict-provisional">INTRADAY</span>' : ''}
         </div>
         <div class="result-actions">${saveBtn} ${tradeBtn}</div>
       </div>
@@ -644,7 +647,9 @@ const UI = (() => {
           <label>Low<input type="text" inputmode="decimal" name="low_d1" step="0.01" placeholder="0.00" required></label>
         </div>
         <div class="form-row">
-          <label>Close<input type="text" inputmode="decimal" name="close_d1" step="0.01" placeholder="0.00" required></label>
+          <label>Current / Close <span class="field-hint">optional — leave empty if intraday</span>
+            <input type="text" inputmode="decimal" name="close_d1" step="0.01" placeholder="0.00 (optional)">
+          </label>
           <label class="span-empty"></label>
         </div>
         <div class="modal-actions">
@@ -657,13 +662,14 @@ const UI = (() => {
     document.getElementById('d1-form').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      const n = k => parseFloat(String(fd.get(k) || '').replace(',', '.'));
+      const raw = k => String(fd.get(k) || '').trim().replace(',', '.');
+      const n = k => { const r = raw(k); return r === '' ? null : parseFloat(r); };
       onSubmit({
         date_d1:  fd.get('date_d1'),
         open_d1:  n('open_d1'),
         high_d1:  n('high_d1'),
         low_d1:   n('low_d1'),
-        close_d1: n('close_d1'),
+        close_d1: n('close_d1'),  // null if empty
       });
       closeModal();
     });
