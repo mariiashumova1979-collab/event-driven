@@ -18,7 +18,7 @@
       <div class="logo">
         <span class="logo-mark">⟳</span>
         <span class="logo-text">Impulse Continuation</span>
-        <span class="logo-sub">Post-Earnings Swing Journal</span>
+        <span class="logo-sub">Post-Earnings Swing Journal <span style="color:#3b82f6;font-size:0.65rem">v2.1</span></span>
       </div>
 
       <nav class="tab-nav" role="tablist">
@@ -320,6 +320,7 @@
       console.log('[CSV] file chosen:', file.name);
       var nameEl = document.getElementById('csv-filename');
       if (nameEl) nameEl.textContent = file.name;
+      alert('CSV выбран: ' + file.name + ' (' + file.size + ' байт)');
 
       var reader = new FileReader();
       reader.onload = function(e) {
