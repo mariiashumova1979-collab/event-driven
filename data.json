@@ -1,8 +1,8 @@
 {
   "setups": [
     {
-      "id": "mo1ym70zh4t5h54",
-      "created_at": "2026-04-16T20:56:34.835Z",
+      "id": "mo2nzezoulqomm0",
+      "created_at": "2026-04-17T08:46:42.084Z",
       "inputs": {
         "ticker": "VSH",
         "direction": "long",
@@ -11,7 +11,7 @@
         "high_d0": 26.38,
         "low_d0": 23.7,
         "close_d0": 26.25,
-        "volume_d0": 6.83,
+        "volume_d0": 6.84,
         "relative_volume_d0": 3.34,
         "close_prev_day": 23.76,
         "atr14": 4.31,
@@ -40,6 +40,10 @@
       },
       "trade_plan": {
         "entry": 26.811,
+        "stop_est": 22.07,
+        "rps_est": 4.741,
+        "pos_est": 25,
+        "risk_amount": 119,
         "stop": null,
         "tp1": null,
         "tp2": null,
