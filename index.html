@@ -307,5 +307,101 @@
 <script src="ui.js"></script>
 <script src="app.js"></script>
 
+<script>
+// ── CSV Import (self-contained) ──────────────────────────────────────────────
+(function() {
+  function setupCsv() {
+    var inp = document.getElementById('csv-file-input');
+    if (!inp) { console.error('[CSV] input#csv-file-input not found'); return; }
+    console.log('[CSV] attaching change listener');
+    inp.addEventListener('change', function() {
+      var file = inp.files[0];
+      if (!file) return;
+      console.log('[CSV] file chosen:', file.name);
+      var nameEl = document.getElementById('csv-filename');
+      if (nameEl) nameEl.textContent = file.name;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        console.log('[CSV] read complete');
+        parseCsv(e.target.result);
+      };
+      reader.onerror = function() { alert('Cannot read file'); };
+      reader.readAsText(file);
+      inp.value = '';
+    });
+  }
+
+  function parseCsv(text) {
+    var lines = text.replace(/\r/g,'').split('\n').filter(function(l){ return l.trim(); });
+    if (lines.length < 2) { alert('CSV too short'); return; }
+    var first = lines[0].toLowerCase();
+    var start = (first.indexOf('date') >= 0 || first.indexOf('open') >= 0) ? 1 : 0;
+    var rows = [];
+    for (var i = start; i < lines.length; i++) {
+      var c = lines[i].split(',');
+      var row;
+      if (c.length >= 8) {
+        row = { symbol: c[0].replace(/\..*$/,'').toUpperCase(), date: c[1].trim(), open: +c[3], high: +c[4], low: +c[5], close: +c[6], volume: +c[7]||0 };
+      } else if (c.length >= 6) {
+        row = { symbol: '', date: c[0].trim(), open: +c[1], high: +c[2], low: +c[3], close: +c[4], volume: +c[5]||0 };
+      }
+      if (row && row.date && !isNaN(row.open)) rows.push(row);
+    }
+    if (!rows.length) { alert('No valid rows in CSV'); return; }
+    rows.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+    renderPreview(rows);
+  }
+
+  function renderPreview(rows) {
+    var el = document.getElementById('csv-preview');
+    if (!el) return;
+    var html = '<table class="csv-table"><thead><tr><th>Date</th><th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Volume</th><th></th></tr></thead><tbody>';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      html += '<tr><td class="mono text-sm">'+r.date+'</td><td class="mono text-sm">'+(r.symbol||'—')+'</td><td class="mono text-sm">'+r.open+'</td><td class="mono text-sm">'+r.high+'</td><td class="mono text-sm">'+r.low+'</td><td class="mono text-sm">'+r.close+'</td><td class="mono text-sm">'+(r.volume>0?r.volume.toLocaleString():'—')+'</td><td class="csv-btns"><button type="button" class="btn btn-xs btn-outline" onclick="csvSetD0('+i+')">D0</button> <button type="button" class="btn btn-xs btn-ghost" onclick="csvSetD1('+i+')">D+1</button></td></tr>';
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+    el.style.display = '';
+    el.classList.remove('hidden');
+    window._csvRows = rows;
+  }
+
+  window.csvSetD0 = function(idx) {
+    var rows = window._csvRows; if (!rows) return;
+    var r = rows[idx];
+    var f = document.getElementById('setup-form');
+    function set(name, val) { var el = f.querySelector('[name="'+name+'"]'); if (el) el.value = val; }
+    set('date_d0', r.date); set('open_d0', r.open); set('high_d0', r.high);
+    set('low_d0', r.low); set('close_d0', r.close); set('volume_d0', r.volume||'');
+    if (idx > 0) set('close_prev_day', rows[idx-1].close);
+    if (r.symbol) { var t = f.querySelector('[name="ticker"]'); if (t && !t.value) t.value = r.symbol; }
+    document.querySelectorAll('#csv-preview tr').forEach(function(tr){ tr.style.background=''; });
+    var trs = document.querySelectorAll('#csv-preview tbody tr');
+    if (trs[idx]) trs[idx].style.background = 'rgba(59,130,246,0.12)';
+    console.log('[CSV] D0 set:', r);
+  };
+
+  window.csvSetD1 = function(idx) {
+    var rows = window._csvRows; if (!rows) return;
+    var r = rows[idx];
+    var f = document.getElementById('setup-form');
+    function set(name, val) { var el = f.querySelector('[name="'+name+'"]'); if (el) el.value = val; }
+    set('date_d1', r.date); set('open_d1', r.open); set('high_d1', r.high);
+    set('low_d1', r.low); set('close_d1', r.close);
+    var trs = document.querySelectorAll('#csv-preview tbody tr');
+    if (trs[idx]) trs[idx].style.background = 'rgba(16,185,129,0.12)';
+    console.log('[CSV] D+1 set:', r);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupCsv);
+  } else {
+    setupCsv();
+  }
+})();
+</script>
+
 </body>
 </html>
