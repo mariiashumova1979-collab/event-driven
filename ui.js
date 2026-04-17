@@ -15,22 +15,20 @@ const UI = (() => {
 
   function _bindCsvImport() {
     const input = document.getElementById('csv-file-input');
-    if (!input) { console.warn('[CSV] csv-file-input not found'); return; }
-    input.addEventListener('change', function(e) {
+    if (!input) { console.warn('[CSV] input not found'); return; }
+    input.addEventListener('change', async function(e) {
       const file = e.target.files[0];
       if (!file) return;
+      console.log('[CSV] loading:', file.name, file.size, 'bytes');
       document.getElementById('csv-filename').textContent = file.name;
-      const reader = new FileReader();
-      reader.onerror = () => showToast('Failed to read file', 'error');
-      reader.onload = function(ev) {
-        try {
-          _parseCsvAndPreview(ev.target.result);
-        } catch(err) {
-          console.error('[CSV] parse error:', err);
-          showToast('CSV parse error: ' + err.message, 'error');
-        }
-      };
-      reader.readAsText(file, 'UTF-8');
+      try {
+        const text = await file.text();
+        console.log('[CSV] text loaded, length:', text.length);
+        _parseCsvAndPreview(text);
+      } catch(err) {
+        console.error('[CSV] error:', err);
+        showToast('Failed to read file: ' + err.message, 'error');
+      }
     });
   }
 
