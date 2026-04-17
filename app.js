@@ -301,6 +301,46 @@ const App = (() => {
     UI.renderSetupResult(state.lastResult, true, setup.id, state.resultHistory);
   }
 
+  function addD1ToSetup(setupId, d1data) {
+    const setup = state.data.setups.find(s => s.id === setupId);
+    if (!setup) return;
+
+    // Merge D1 data into existing inputs and re-evaluate
+    const newInputs = {
+      ...setup.inputs,
+      has_d1:   true,
+      date_d1:  d1data.date_d1,
+      open_d1:  d1data.open_d1,
+      high_d1:  d1data.high_d1,
+      low_d1:   d1data.low_d1,
+      close_d1: d1data.close_d1,
+    };
+
+    const result = Strategy.evaluateSetup(newInputs);
+
+    // Update setup in place
+    Object.assign(setup, {
+      inputs:             newInputs,
+      metrics:            result.metrics,
+      d0_valid:           result.d0_valid,
+      d0_invalid_reasons: result.d0_invalid_reasons,
+      d1_pattern:         result.d1_pattern,
+      trade_plan:         result.trade_plan,
+      trade_valid:        result.trade_valid,
+      invalid_reasons:    result.invalid_reasons,
+    });
+
+    save();
+
+    // Update current result view
+    state.lastResult       = { inputs: newInputs, ...result };
+    state.lastResultSaved  = true;
+    state.lastSavedSetupId = setupId;
+    _switchTab('result');
+    UI.showToast(`D+1 added — ${result.trade_valid ? 'VALID setup' : 'setup invalid'}`,
+                 result.trade_valid ? 'success' : 'info');
+  }
+
   // ─── GitHub Sync ─────────────────────────────────────────────────────────────
 
   function _setSyncStatus(state) {
@@ -507,7 +547,11 @@ const App = (() => {
 
     // ── Result tab actions (delegated) ──
     document.getElementById('tab-result').addEventListener('click', e => {
-      if (e.target.id === 'btn-save-setup') {
+      // Use closest() to handle clicks on button children (spans, icons, etc)
+      const btn = e.target.closest('button, [data-history-index]');
+      const btnId = btn?.id;
+
+      if (btnId === 'btn-save-setup') {
         if (!state.lastResultSaved) {
           const sid = saveSetup();
           if (sid) createTradeFromSetup(sid);
@@ -515,12 +559,25 @@ const App = (() => {
           createTradeFromSetup(state.lastSavedSetupId);
         }
       }
-      if (e.target.id === 'btn-save-only') {
+      if (btnId === 'btn-save-only') {
         saveSetup();
       }
+      if (btnId === 'btn-add-d1-data') {
+        console.log('[D1 btn] clicked. lastSavedSetupId:', state.lastSavedSetupId, 'lastResult:', !!state.lastResult);
+        if (!state.lastSavedSetupId) {
+          UI.showToast('Save setup to journal first', 'error');
+          return;
+        }
+        if (!state.lastResult) {
+          UI.showToast('No active result', 'error');
+          return;
+        }
+        UI.showD1Modal(state.lastResult.inputs, d1data => addD1ToSetup(state.lastSavedSetupId, d1data));
+      }
       // History item click
-      if (e.target.closest('.history-item')) {
-        const idx = parseInt(e.target.closest('.history-item').dataset.historyIndex);
+      const histEl = e.target.closest('.history-item');
+      if (histEl) {
+        const idx = parseInt(histEl.dataset.historyIndex);
         if (!isNaN(idx)) loadResultFromHistory(idx);
       }
     });
