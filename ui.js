@@ -8,6 +8,119 @@ const UI = (() => {
   function init(appState) {
     _prefillFormDefaults(appState.data.app_settings);
     _bindCommaAsDot();
+    _bindCsvImport();
+  }
+
+  // ─── CSV Import ──────────────────────────────────────────────────────────────
+
+  function _bindCsvImport() {
+    const input = document.getElementById('csv-file-input');
+    if (!input) return;
+    input.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      document.getElementById('csv-filename').textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = ev => _parseCsvAndPreview(ev.target.result);
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+  }
+
+  function _parseCsvAndPreview(text) {
+    const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+    if (lines.length < 2) { showToast('CSV is empty or unreadable', 'error'); return; }
+
+    // Detect header
+    const header = lines[0].toLowerCase();
+    const hasHeader = header.includes('date') || header.includes('open');
+    const dataLines = hasHeader ? lines.slice(1) : lines;
+
+    const rows = dataLines.map(line => {
+      const cols = line.split(',');
+      // Format: Symbol,Date,Time,Open,High,Low,Close,Volume
+      if (cols.length >= 8) {
+        return { symbol: cols[0].replace(/\..*$/, '').toUpperCase(), date: cols[1], open: +cols[3], high: +cols[4], low: +cols[5], close: +cols[6], volume: +cols[7] };
+      }
+      // Fallback: Date,Open,High,Low,Close,Volume (no symbol/time)
+      if (cols.length >= 6) {
+        return { symbol: '', date: cols[0], open: +cols[1], high: +cols[2], low: +cols[3], close: +cols[4], volume: +cols[5] };
+      }
+      return null;
+    }).filter(r => r && r.date && !isNaN(r.open));
+
+    if (rows.length === 0) { showToast('No valid rows found in CSV', 'error'); return; }
+
+    // Sort ascending by date
+    rows.sort((a, b) => a.date < b.date ? -1 : 1);
+
+    _renderCsvPreview(rows);
+  }
+
+  function _renderCsvPreview(rows) {
+    const el = document.getElementById('csv-preview');
+    const rowsHtml = rows.map((r, i) => `
+      <tr>
+        <td class="mono text-sm">${r.date}</td>
+        <td class="mono text-sm">${r.symbol || '—'}</td>
+        <td class="mono text-sm">${r.open}</td>
+        <td class="mono text-sm">${r.high}</td>
+        <td class="mono text-sm">${r.low}</td>
+        <td class="mono text-sm">${r.close}</td>
+        <td class="mono text-sm">${_fmtVol(r.volume)}</td>
+        <td>
+          <button class="btn btn-xs btn-outline csv-set-d0" data-idx="${i}">D0</button>
+          <button class="btn btn-xs btn-ghost csv-set-d1" data-idx="${i}">D+1</button>
+        </td>
+      </tr>`).join('');
+
+    el.innerHTML = `
+      <table class="csv-table">
+        <thead><tr>
+          <th>Date</th><th>Symbol</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Volume</th><th></th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>`;
+    el.classList.remove('hidden');
+
+    // Store rows on element for event delegation
+    el._csvRows = rows;
+
+    el.addEventListener('click', e => {
+      const idx = parseInt(e.target.dataset.idx);
+      if (isNaN(idx)) return;
+      const r = rows[idx];
+      const f = document.getElementById('setup-form');
+      const set = (name, val) => { const inp = f.querySelector(`[name="${name}"]`); if (inp) inp.value = val; };
+
+      if (e.target.classList.contains('csv-set-d0')) {
+        set('date_d0',  r.date);
+        set('open_d0',  r.open);
+        set('high_d0',  r.high);
+        set('low_d0',   r.low);
+        set('close_d0', r.close);
+        set('volume_d0', r.volume);
+        // Previous close = row above
+        if (idx > 0) set('close_prev_day', rows[idx - 1].close);
+        // Ticker from symbol if field is empty
+        if (r.symbol) { const t = f.querySelector('[name="ticker"]'); if (t && !t.value) t.value = r.symbol; }
+        // Highlight row
+        el.querySelectorAll('tr').forEach(tr => tr.classList.remove('csv-row-d0', 'csv-row-d1'));
+        e.target.closest('tr').classList.add('csv-row-d0');
+        showToast('D0 filled — enter ATR14 and RelVol manually', 'info');
+      }
+
+      if (e.target.classList.contains('csv-set-d1')) {
+        set('date_d1',  r.date);
+        set('open_d1',  r.open);
+        set('high_d1',  r.high);
+        set('low_d1',   r.low);
+        set('close_d1', r.close);
+        el.querySelectorAll('tr').forEach(tr => tr.classList.remove('csv-row-d1'));
+        e.target.closest('tr').classList.add('csv-row-d1');
+        showToast('D+1 filled', 'success');
+      }
+    });
   }
 
   /** Allow comma as decimal separator on all number inputs. */
@@ -129,6 +242,10 @@ const UI = (() => {
         ? `<button class="btn btn-ghost" disabled>✓ Saved to Journal</button>`
         : `<button class="btn btn-primary" id="btn-save-only">Save to Journal</button>`;
 
+      const d1Btn = saved && d0_valid
+        ? `<button class="btn btn-success" id="btn-add-d1-data">+ Add D+1 Data</button>`
+        : '';
+
       const reasonsHtml = d0_invalid_reasons.length
         ? `<div class="invalid-reasons"><strong>Issues:</strong><ul>${d0_invalid_reasons.map(r => `<li>${_esc(r)}</li>`).join('')}</ul></div>`
         : '';
@@ -144,7 +261,7 @@ const UI = (() => {
             <span class="dir-badge dir-${dir}">${dir.toUpperCase()}</span>
             <span class="verdict-badge verdict-${d0StatusClass}">${d0Verdict}</span>
           </div>
-          <div class="result-actions">${saveBtn}</div>
+          <div class="result-actions">${saveBtn} ${d1Btn}</div>
         </div>
 
         ${reasonsHtml}
@@ -482,7 +599,49 @@ const UI = (() => {
     });
   }
 
-  function openModal(html) {
+  function showD1Modal(existingInputs, onSubmit) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaultDate = (existingInputs.date_d1) || tomorrow.toISOString().slice(0, 10);
+
+    openModal(`
+      <div class="modal-header">Add D+1 Data — ${_esc(existingInputs.ticker)}</div>
+      <form id="d1-form" class="modal-form">
+        <div class="form-row">
+          <label>Date D+1<input type="date" name="date_d1" value="${defaultDate}" required></label>
+          <label>Open<input type="number" name="open_d1" step="0.01" placeholder="0.00" required></label>
+        </div>
+        <div class="form-row">
+          <label>High<input type="number" name="high_d1" step="0.01" placeholder="0.00" required></label>
+          <label>Low<input type="number" name="low_d1" step="0.01" placeholder="0.00" required></label>
+        </div>
+        <div class="form-row">
+          <label>Close<input type="number" name="close_d1" step="0.01" placeholder="0.00" required></label>
+          <label class="span-empty"></label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="d1-modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Analyze D+1</button>
+        </div>
+      </form>`);
+
+    document.getElementById('d1-modal-cancel').addEventListener('click', closeModal);
+    document.getElementById('d1-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const n  = k => parseFloat(fd.get(k));
+      onSubmit({
+        date_d1:  fd.get('date_d1'),
+        open_d1:  n('open_d1'),
+        high_d1:  n('high_d1'),
+        low_d1:   n('low_d1'),
+        close_d1: n('close_d1'),
+      });
+      closeModal();
+    });
+  }
+
+
     if (html) document.getElementById('modal-content').innerHTML = html;
     document.getElementById('modal').classList.remove('hidden');
     document.getElementById('modal-backdrop').classList.remove('hidden');
@@ -704,7 +863,7 @@ const UI = (() => {
   return {
     init, renderTab, collectFormInputs,
     renderSetupResult, renderTrades, renderJournal, renderStats,
-    showUpdateModal, openModal, closeModal, showToast
+    showUpdateModal, showD1Modal, openModal, closeModal, showToast
   };
 
 })();
