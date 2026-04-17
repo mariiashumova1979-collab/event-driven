@@ -76,17 +76,27 @@
       "position_size": 62,
       "risk_per_share": 1.903,
       "risk_amount": 119,
-      "status": "planned",
+      "status": "active",
       "tp1_hit": false,
       "current_stop": 24.908,
       "shares_remaining": 62,
       "pnl": null,
       "pnl_r": null,
-      "open_date": null,
+      "open_date": "2026-04-17",
       "close_date": null,
       "result_type": null,
       "closed_price": null,
-      "daily_updates": [],
+      "daily_updates": [
+        {
+          "id": "mo3dbtoo9hext3z",
+          "date": "2026-04-17",
+          "open": 27,
+          "high": 27,
+          "low": 25.43,
+          "close": 25.92,
+          "is_time_exit": false
+        }
+      ],
       "created_at": "2026-04-17T15:49:33.480Z"
     }
   ],
