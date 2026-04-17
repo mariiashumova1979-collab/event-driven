@@ -18,7 +18,7 @@
       <div class="logo">
         <span class="logo-mark">⟳</span>
         <span class="logo-text">Impulse Continuation</span>
-        <span class="logo-sub">Post-Earnings Swing Journal <span style="color:#3b82f6;font-size:0.65rem">v2.1</span></span>
+        <span class="logo-sub">Post-Earnings Swing Journal <span style="color:#3b82f6;font-size:0.65rem">v2.2</span></span>
       </div>
 
       <nav class="tab-nav" role="tablist">
@@ -84,11 +84,11 @@
               </label>
               <label class="form-field">
                 <span class="field-label">Account Size ($)</span>
-                <input type="number" name="account_size" id="account_size" min="1000" step="500" placeholder="25000" required>
+                <input type="text" inputmode="decimal" name="account_size" id="account_size" min="1000" step="500" placeholder="25000" required>
               </label>
               <label class="form-field">
                 <span class="field-label">Risk per Trade (%)</span>
-                <input type="number" name="risk_percent_per_trade" id="risk_percent_per_trade" min="0.1" max="5" step="0.1" placeholder="1.0" required>
+                <input type="text" inputmode="decimal" name="risk_percent_per_trade" id="risk_percent_per_trade" min="0.1" max="5" step="0.1" placeholder="1.0" required>
               </label>
             </div>
           </div>
@@ -103,39 +103,39 @@
               </label>
               <label class="form-field">
                 <span class="field-label">Previous Close</span>
-                <input type="number" name="close_prev_day" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="close_prev_day" step="0.01" placeholder="0.00" required>
               </label>
               <label class="form-field">
                 <span class="field-label">ATR14</span>
-                <input type="number" name="atr14" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="atr14" step="0.01" placeholder="0.00" required>
               </label>
             </div>
             <div class="form-grid form-grid-4">
               <label class="form-field">
                 <span class="field-label">Open D0</span>
-                <input type="number" name="open_d0" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="open_d0" step="0.01" placeholder="0.00" required>
               </label>
               <label class="form-field">
                 <span class="field-label">High D0</span>
-                <input type="number" name="high_d0" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="high_d0" step="0.01" placeholder="0.00" required>
               </label>
               <label class="form-field">
                 <span class="field-label">Low D0</span>
-                <input type="number" name="low_d0" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="low_d0" step="0.01" placeholder="0.00" required>
               </label>
               <label class="form-field">
                 <span class="field-label">Close D0</span>
-                <input type="number" name="close_d0" step="0.01" placeholder="0.00" required>
+                <input type="text" inputmode="decimal" name="close_d0" step="0.01" placeholder="0.00" required>
               </label>
             </div>
             <div class="form-grid form-grid-3">
               <label class="form-field">
                 <span class="field-label">Volume D0</span>
-                <input type="number" name="volume_d0" step="1" placeholder="0">
+                <input type="text" inputmode="decimal" name="volume_d0" step="1" placeholder="0">
               </label>
               <label class="form-field">
                 <span class="field-label">Relative Volume</span>
-                <input type="number" name="relative_volume_d0" step="0.01" placeholder="1.00" required>
+                <input type="text" inputmode="decimal" name="relative_volume_d0" step="0.01" placeholder="1.00" required>
               </label>
             </div>
           </div>
@@ -150,22 +150,22 @@
               </label>
               <label class="form-field">
                 <span class="field-label">Open D+1</span>
-                <input type="number" name="open_d1" step="0.01" placeholder="0.00">
+                <input type="text" inputmode="decimal" name="open_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field span-empty"></label>
             </div>
             <div class="form-grid form-grid-4">
               <label class="form-field">
                 <span class="field-label">High D+1</span>
-                <input type="number" name="high_d1" step="0.01" placeholder="0.00">
+                <input type="text" inputmode="decimal" name="high_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field">
                 <span class="field-label">Low D+1</span>
-                <input type="number" name="low_d1" step="0.01" placeholder="0.00">
+                <input type="text" inputmode="decimal" name="low_d1" step="0.01" placeholder="0.00">
               </label>
               <label class="form-field">
                 <span class="field-label">Close D+1</span>
-                <input type="number" name="close_d1" step="0.01" placeholder="0.00">
+                <input type="text" inputmode="decimal" name="close_d1" step="0.01" placeholder="0.00">
               </label>
             </div>
           </div>
@@ -320,7 +320,6 @@
       console.log('[CSV] file chosen:', file.name);
       var nameEl = document.getElementById('csv-filename');
       if (nameEl) nameEl.textContent = file.name;
-      alert('CSV выбран: ' + file.name + ' (' + file.size + ' байт)');
 
       var reader = new FileReader();
       reader.onload = function(e) {

@@ -7,7 +7,6 @@ const UI = (() => {
 
   function init(appState) {
     _prefillFormDefaults(appState.data.app_settings);
-    _bindCommaAsDot();
     _bindCsvImport();
   }
 
@@ -197,7 +196,11 @@ const UI = (() => {
   function collectFormInputs() {
     const f = document.getElementById('setup-form');
     const v = name => f.querySelector(`[name="${name}"]`)?.value?.trim();
-    const n = name => parseFloat(v(name));
+    const n = name => {
+      const raw = v(name);
+      if (raw == null || raw === '') return NaN;
+      return parseFloat(raw.replace(',', '.'));
+    };
 
     const ticker = v('ticker');
     if (!ticker) { showToast('Ticker is required', 'error'); return null; }
@@ -589,14 +592,14 @@ const UI = (() => {
       <form id="update-form" class="modal-form">
         <div class="form-row">
           <label>Date<input type="date" name="date" value="${today}" required></label>
-          <label>Open<input type="number" name="open" step="0.01" placeholder="0.00" required></label>
+          <label>Open<input type="text" inputmode="decimal" name="open" step="0.01" placeholder="0.00" required></label>
         </div>
         <div class="form-row">
-          <label>High<input type="number" name="high" step="0.01" placeholder="0.00" required></label>
-          <label>Low<input type="number" name="low" step="0.01" placeholder="0.00" required></label>
+          <label>High<input type="text" inputmode="decimal" name="high" step="0.01" placeholder="0.00" required></label>
+          <label>Low<input type="text" inputmode="decimal" name="low" step="0.01" placeholder="0.00" required></label>
         </div>
         <div class="form-row">
-          <label>Close<input type="number" name="close" step="0.01" placeholder="0.00" required></label>
+          <label>Close<input type="text" inputmode="decimal" name="close" step="0.01" placeholder="0.00" required></label>
           <label class="checkbox-label"><input type="checkbox" name="is_time_exit"> Time Exit (D+3)</label>
         </div>
         <div class="modal-actions">
@@ -611,12 +614,13 @@ const UI = (() => {
     document.getElementById('update-form').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const num = k => parseFloat(String(fd.get(k) || '').replace(',', '.'));
       onSubmit({
         date:         fd.get('date'),
-        open:         parseFloat(fd.get('open')),
-        high:         parseFloat(fd.get('high')),
-        low:          parseFloat(fd.get('low')),
-        close:        parseFloat(fd.get('close')),
+        open:         num('open'),
+        high:         num('high'),
+        low:          num('low'),
+        close:        num('close'),
         is_time_exit: !!fd.get('is_time_exit')
       });
       closeModal();
@@ -633,14 +637,14 @@ const UI = (() => {
       <form id="d1-form" class="modal-form">
         <div class="form-row">
           <label>Date D+1<input type="date" name="date_d1" value="${defaultDate}" required></label>
-          <label>Open<input type="number" name="open_d1" step="0.01" placeholder="0.00" required></label>
+          <label>Open<input type="text" inputmode="decimal" name="open_d1" step="0.01" placeholder="0.00" required></label>
         </div>
         <div class="form-row">
-          <label>High<input type="number" name="high_d1" step="0.01" placeholder="0.00" required></label>
-          <label>Low<input type="number" name="low_d1" step="0.01" placeholder="0.00" required></label>
+          <label>High<input type="text" inputmode="decimal" name="high_d1" step="0.01" placeholder="0.00" required></label>
+          <label>Low<input type="text" inputmode="decimal" name="low_d1" step="0.01" placeholder="0.00" required></label>
         </div>
         <div class="form-row">
-          <label>Close<input type="number" name="close_d1" step="0.01" placeholder="0.00" required></label>
+          <label>Close<input type="text" inputmode="decimal" name="close_d1" step="0.01" placeholder="0.00" required></label>
           <label class="span-empty"></label>
         </div>
         <div class="modal-actions">
@@ -653,7 +657,7 @@ const UI = (() => {
     document.getElementById('d1-form').addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(e.target);
-      const n  = k => parseFloat(fd.get(k));
+      const n = k => parseFloat(String(fd.get(k) || '').replace(',', '.'));
       onSubmit({
         date_d1:  fd.get('date_d1'),
         open_d1:  n('open_d1'),
