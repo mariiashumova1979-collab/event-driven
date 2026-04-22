@@ -122,7 +122,7 @@
       },
       "trade_valid": true,
       "invalid_reasons": [],
-      "trade_id": null
+      "trade_id": "moa7pb2w8zwg4f1"
     }
   ],
   "trades": [
@@ -150,6 +150,31 @@
       "closed_price": null,
       "daily_updates": [],
       "created_at": "2026-04-17T15:49:33.480Z"
+    },
+    {
+      "id": "moa7pb2w8zwg4f1",
+      "setup_id": "moa1in2fgjuprpc",
+      "ticker": "TSCO",
+      "direction": "short",
+      "entry": 38.512,
+      "stop": 40.956,
+      "tp1": 36.068,
+      "tp2": 33.624,
+      "position_size": 48,
+      "risk_per_share": 2.444,
+      "risk_amount": 119,
+      "status": "planned",
+      "tp1_hit": false,
+      "current_stop": 40.956,
+      "shares_remaining": 48,
+      "pnl": null,
+      "pnl_r": null,
+      "open_date": null,
+      "close_date": null,
+      "result_type": null,
+      "closed_price": null,
+      "daily_updates": [],
+      "created_at": "2026-04-22T15:33:06.008Z"
     }
   ],
   "app_settings": {
