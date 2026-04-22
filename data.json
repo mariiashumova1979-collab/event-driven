@@ -81,7 +81,7 @@
         "date_d1": "2026-04-23",
         "open_d1": 39.7,
         "high_d1": 40.14,
-        "low_d1": 39.11,
+        "low_d1": 38.78,
         "close_d1": null,
         "account_size": 11900,
         "risk_percent_per_trade": 1
@@ -99,13 +99,15 @@
       "d1_pattern": {
         "price_above_mid": true,
         "pullback_ok": true,
-        "breakout": false,
+        "breakout": true,
         "retest": false,
         "not_too_far": true,
-        "entry_type": null,
-        "structure_valid": false,
+        "entry_type": "Breakdown",
+        "structure_valid": true,
         "provisional": true,
-        "detected": []
+        "detected": [
+          "Breakdown"
+        ]
       },
       "trade_plan": {
         "entry": 38.512,
@@ -118,10 +120,8 @@
         "stop_valid": true,
         "stop_ratio": 0.6
       },
-      "trade_valid": false,
-      "invalid_reasons": [
-        "No breakdown or retest of L0 ($38.92)"
-      ],
+      "trade_valid": true,
+      "invalid_reasons": [],
       "trade_id": null
     }
   ],
